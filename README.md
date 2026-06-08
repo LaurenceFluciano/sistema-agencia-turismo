@@ -8,35 +8,56 @@ Trabalho acadêmico de Banco de Dados II envolvendo:
 - Implementação de uma interface do sistema para manipulação CRUD.
 
 
+> **Atenção:** O sistema que será apresentado é de nível acadêmico com objetivo de fixar os conhecimentos de banco de dados.
+
 # Contexto
 
-O dominio e os problemas que uma agência de turismo tem são extremamente complexos. Normalmente o negócio envolve:
+Uma agência de turismo é responsável pela assistência ao turista e prestação de serviço para a organização dos itinerários. Esse tipo de negócio exige atendimento personalizado e alta complexidade se for feito de forma manual, uma vez que que apresenta os seguintes desafios:
 
-- Gestão de reservas de viagens de cada cliente
-- Pesquisar serviços e fornecedores para incluir na viagem
-- Negocionar o orçamento com o cliente
-- Planjear o itinerário do cliente
+- **Falta de atualização em tempo real:** Leva à venda duplicada do mesmo quarto ou assento.
+- **Perda de margem de lucro:** Por não acompanhar as flutuações rápidas de preços de hotéis e companhias aéreas.
+- **Descontrole Financeiro:** Esquecimento de cobranças de clientes, atrasos em pagamentos de fornecedores e falhas críticas no fluxo de caixa.
+- **Redundância Operacional:** Redigitação manual de dados de clientes, fornecedores e voos em planilhas isoladas ou papéis.
+- **Descentralização de Catálogo:** Serviços de fornecedores espalhados, sem centralizar um catálogo disponível. Além disso, a procura de serviços em determinados locais fica extremamente complexa e lenta.
+- **Iniciativa Logística Manual:** Demanda de horas para formatar e enviar roteiros que um sistema automatizado geraria em segundos.
+- **Riscos Jurídicos:** Maior chance de esquecer de informar o cliente sobre vistos, vacinas ou regras de bagagem, gerando processos judiciais.
+- **Inexistência de CRM:** Impossibilidade de fazer um pós-venda eficiente ou lembrar do histórico de preferências do viajante.
+- **Gargalo de Escalar o Negócio:** O volume de vendas fica severamente limitado pela quantidade de braços e horas disponíveis na equipe.
 
-O atendimento não se limita apenas a um pacote pronto. O principal desafio da modelagem é garantir consistência e a aplicação de cada serviço.
-Inicialmente consideramos um modelo simples, no entanto alguns desafios aparecem:
+# Escopo
 
-### 1. O que é de fato uma Viagem?
+O sistema proposto tem como objetivo reduzir processos manuais, aumentar a produtividade e garantir rastrabilidade para cada venda ofertada. Diante desse cenário, o escopo delimita:
 
-A viagem era um conceito extremamente abstrato e complexo. Não sabia-se dizer se é uma reserva, pacote, serviço ou histórico.
-Logo a modelagem quebrou em tabelas com dados que realmente podem ser gerenciados pela agência.
+- Cadastros de clientes potenciais e fornecedores.
+- Registro do catálogo de serviços que agência conhece.
+- Permitirá a criação de pacotes.
+- Permitir a negociação de uma reserva de viagem, adicionando os serviços, pacotes e ofertando diferentes fornecedores para o cliente.
+- Possibilitar a montagem de um cronograma chamado itinerário de viagem para o cliente saber o que fazer e agência ter o registro formal do ocorrido.
 
-### 2. Como efetuar Pagamento parcelado?
+### O que é:
 
-Nesse cenário precisariamos de um mini sistema financeiro, logo para esse contexto preferimos utilizar apenas uma entidade: `Pagamento`
+- **Gestão de identidade - CRM:**
+    - Cadastros estruturados de clientes potenciais, preferências de consumo e gerenciamento de fornecedores parceiros através de relacionamento estruturado entre entidades.
 
-### 3. Planejamento da viagem ou Roteiro não esta incluso no domínio.
+- **Catálogo Dinâmico de Serviços:**
+    - Registro unificado do catálogo de serviços que a agência conhece, mapeados geograficamente por pontos de interesse locais.
 
-Esse foi um ponto extremamente importante para não gerar confusão. O dominio que se preocupa responsável por se preocupar com o roteiro completo, chamado itinerário da viagem, deve estar separado da parte de gestão dos serviços contratados e reserva efetuada.
+- **Motor de Vendas e Reservas**: negociação, disponibilidade e preço
+    - Permitir a negociação de uma reserva de viagem, adicionando itens vendidos, calculando margens de lucro imediatas e vinculando múltiplos fornecedores para o cliente sob o mesmo contrato de reserva.
 
-### 4. Serviço contratado ≠ Recomendação
+- **Geração de Itinerário**:
+    - Possibilitar a montagem de um cronograma passo a passo detalhado para o cliente saber exatamente o que fazer, garantindo que o itinerário fique amarrado diretamente à venda executada
 
-Esse é um detalhe sutil, cada serviço que a agencia adiciona como um item da reserva gera algum tipo de lucro para empresa. No entanto, recomendações são importantes para analisar quais serviços os clientes estão mais interessados, mas não podem ser confundidos com serviços que os fornecedores oferecem para a agência e que existe.
+### O que não é:
 
-### 5. Deve ser considerado cada passageiro ou pessoa que ira fazer a viagem.
+- Não disponibiliza templates de itinerários para ser reutilizado em outras viagens
+- **O serviço não representa o gerenciamento de inventário interno de terceiros:** A tabela de serviços não controla a disponibilidade de assentos de aeronaves, status de limpeza de quartos de hotel ou frotas de veículos. O serviço funciona puramente como uma âncora conceitual geográfica no catálogo da agência. Toda a especificidade do produto e a origem dos dados ficam isoladas nas ofertas dos fornecedores, evitando o `*scope creep*` e mantendo o foco estrito na gestão do fluxo de vendas e organização de itinerários da agência.
 
-É essencial considerar a quantidade de pessoas que devem fazer as viagens ou então algumas partes do sistema podem quebrar.
+### Conclusão
+
+Em suma o objetivo é o controle estruturado sobre o ciclo completo de uma viagem vendida ou planejada por uma agência, reduzindo erro humano e centralizando informações dispersas.
+
+# Modelagem
+
+[document.pdf](https://github.com/user-attachments/files/28725455/document.pdf)
+
