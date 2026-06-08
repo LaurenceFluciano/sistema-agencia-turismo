@@ -31,9 +31,7 @@ CREATE TABLE "Local" (
   nome_ponto VARCHAR,
   estado VARCHAR,
   pais VARCHAR,
-  municipio VARCHAR,
-  longitude DECIMAL,
-  latitude DECIMAL
+  municipio VARCHAR
 );
 
 -- Um local pode possuir vários serviços.
