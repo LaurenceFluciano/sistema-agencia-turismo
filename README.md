@@ -59,5 +59,7 @@ Em suma o objetivo é o controle estruturado sobre o ciclo completo de uma viage
 
 # Modelagem
 
-[document.pdf](https://github.com/user-attachments/files/28725455/document.pdf)
+A seguir a modelagem lógica do sistema:
+
+[modelagem_agencia_de_turismo.pdf](https://github.com/user-attachments/files/28725455/document.pdf)
 
