@@ -6,6 +6,13 @@ values
 (04, 'Lauro Müller serviços de hotelaria LTDA', '13.390.775/0001-62' ),
 (05, 'Dionisio consolidadora de turismo LTDA', '91.842.082/0001-77' );
 
+INSERT INTO Local (nome_ponto, municipio, estado, pais) 
+VALUES 
+('Serra do Rio do Rastro', 'Lauro Müller', 'SC', 'Brasil'),
+('Copacabana', 'Rio de Janeiro', 'RJ', 'Brasil'),
+('Marco Zero', 'Recife', 'PE', 'Brasil'),
+('Cataratas do Iguaçu', 'Foz do Iguaçu', 'PR', 'Brasil'),
+('Praça Cívica', 'Goiânia', 'GO', 'Brasil');
 
 insert into servico(id, id_local, nome, tipo)
 values
