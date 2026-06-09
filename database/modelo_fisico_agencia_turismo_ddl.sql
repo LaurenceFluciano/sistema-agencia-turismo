@@ -1,3 +1,23 @@
+
+DROP TABLE IF EXISTS Itinerario;
+DROP TABLE IF EXISTS Passageiro;
+DROP TABLE IF EXISTS Pagamento;
+DROP TABLE IF EXISTS Venda;
+
+DROP TABLE IF EXISTS Pacote_Item;
+DROP TABLE IF EXISTS Reserva;
+
+DROP TABLE IF EXISTS Recomendacao;
+
+DROP TABLE IF EXISTS Fornecedor_Oferta;
+DROP TABLE IF EXISTS Pacote;
+DROP TABLE IF EXISTS Servico;
+DROP TABLE IF EXISTS "Local";
+
+DROP TABLE IF EXISTS Fornecedor;
+DROP TABLE IF EXISTS Cliente;
+DROP TABLE IF EXISTS Pessoa;
+
 -- CRM
 
 CREATE TABLE Pessoa (
@@ -24,7 +44,10 @@ CREATE TABLE Fornecedor (
   FOREIGN KEY (pessoa_id) REFERENCES Pessoa(id)
 );
 
+
 -- Catálogo
+
+
 
 CREATE TABLE "Local" (
   id INTEGER PRIMARY KEY,
@@ -59,13 +82,13 @@ CREATE TABLE Fornecedor_Oferta (
   fornecedor_id INTEGER,
   servico_id INTEGER,
 
-  preco_estimado DECIMAL,
-  disponibilidade VARCHAR,
-  link_fonte VARCHAR,
-  tipo_fonte VARCHAR,
-  data_atualizacao TIMESTAMP,
-  status VARCHAR,
-  descricao TEXT,
+  preco_estimado DECIMAL NULL,
+  disponibilidade VARCHAR NULL,
+  link_fonte VARCHAR NULL, -- abc.com
+  tipo_fonte VARCHAR NULL, -- site
+  data_atualizacao TIMESTAMP NULL,
+  status VARCHAR NULL,
+  descricao TEXT NULL,
 
   -- Um serviço pode ser ofertado por vários fornecedores.
   FOREIGN KEY (fornecedor_id)
@@ -145,7 +168,8 @@ CREATE TABLE Venda (
   FOREIGN KEY (id_fornecedor_oferta)
     REFERENCES Fornecedor_Oferta(id),
 
-  -- Uma venda de uma oferta de uma reserva ocorre estritamente uma unica vez.
+  -- Uma mesma oferta não pode ser adicionada duas vezes
+  -- dentro da mesma reserva.
   PRIMARY KEY (id_reserva, id_fornecedor_oferta)
 );
 
@@ -211,3 +235,19 @@ CREATE TABLE Passageiro (
     REFERENCES Reserva(id)
 );
 -- RN > Um passageiro não pode estar em duas reservas em um mesmo dia
+
+CREATE TABLE Recomendacao (
+  id INTEGER PRIMARY KEY,
+  id_cliente INTEGER NOT NULL,
+  id_local_interesse INTEGER NOT NULL,
+  tipo_servico_interesse VARCHAR,
+  data_registro TIMESTAMP DEFAULT NOW(),
+
+  -- Um cliente da agência recebe a recomendação
+  FOREIGN KEY (id_cliente) 
+    REFERENCES Cliente(pessoa_id),
+
+  -- A recomendação aponta para um local do catálogo
+  FOREIGN KEY (id_local_interesse) 
+    REFERENCES "Local"(id)
+);
