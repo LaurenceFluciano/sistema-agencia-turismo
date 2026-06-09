@@ -16,14 +16,14 @@ VALUES
 
 insert into servico(id, id_local, nome, tipo)
 values
-(01, 01, 'Hotel Rio do Rastro', 'Hotel')  -- fornecedor 4
-(02, 01, 'Hotel Rio Rocinha', 'Hotel')   -- fornecedor 4
-(03, 01, 'Hotelaria Casa do felipe', 'Hotel')    -- fornecedor 4
-(04, 01, 'Hostel Rio da vaca', 'Hotel')  -- fornecedor 4
-(05, 01, 'Hotel morro da palha', 'Hotel') -- fornecedor 4
-(06, 02, 'Hotel receba', 'Hotel') -- fornecedor 2
-(07, 01, 'Hotel trivago', 'Hotel') -- fornecedor 2
-(08, 05, 'hotel Mariana', 'Hotel') -- fornecedor 1
+(01, 01, 'Hotel Rio do Rastro', 'Hotel'),  -- fornecedor 4
+(02, 01, 'Hotel Rio Rocinha', 'Hotel'),   -- fornecedor 4
+(03, 01, 'Hotelaria Casa do felipe', 'Hotel'),    -- fornecedor 4
+(04, 01, 'Hostel Rio da vaca', 'Hotel'),  -- fornecedor 4
+(05, 01, 'Hotel morro da palha', 'Hotel'), -- fornecedor 4
+(06, 02, 'Hotel receba', 'Hotel'), -- fornecedor 2
+(07, 01, 'Hotel trivago', 'Hotel'), -- fornecedor 2
+(08, 05, 'hotel Mariana', 'Hotel'), -- fornecedor 1
 (09, 04, 'Hotel Leeroy Jenkins', 'Hotel'),  -- fornecedor 1
 (10, 03, 'Hotel Wano', 'Hotel'),  -- fornecedor 3
 (11, 02, 'Joseph Joestar Companhias aereas', 'companhia aerea'), -- fornecedor 1
