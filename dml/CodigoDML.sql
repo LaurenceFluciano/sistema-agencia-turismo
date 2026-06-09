@@ -33,6 +33,30 @@ values
 (22, 04, 'Visto Sem Estresse Assessoria', 'Assessoria de Vistos'), -- fornecedor 3
 (23, 02, 'Mundo Conectado Telecom', 'Chip de Internet Internacional'), --fornecedor 5
 (24, 05, 'SafeBox Guarda-Volumes', 'Armazenamento de Bagagem'), --fornecedor 5
-(25, 03, 'Brisa do Mar Locadora de Barcos', 'Locação de Veículos Marítimos');--fornecedor 5
-
+(25, 03, 'Brisa do Mar Locadora de Barcos', 'Locação de Veículos Marítimos'),--fornecedor 5
+(26, 1, 'Mirante da Serra do Rio do Rastro', 'Ponto Turístico'), --Ponto turístico
+(27, 2, 'Forte de Copacabana', 'Ponto Turístico'), --Ponto turístico
+(28, 3, 'Parque das Esculturas', 'Ponto Turístico'), --Ponto turístico
+(29, 4, 'Parque das Aves', 'Ponto Turístico'), --Ponto turístico
+(30, 5, 'Museu Zoroastro Artiaga', 'Ponto Turístico'), --Ponto turístico
+(31, 1, 'Churrascaria Tropeiro', 'Restaurante'), -- Serra SC
+(32, 1, 'Café da Montanha', 'Restaurante'), -- Serra SC
+(33, 1, 'Bistrô Lauro Müller', 'Restaurante'), -- Serra SC
+(34, 1, 'Pizzaria da Serra', 'Restaurante'), -- Serra SC
+(35, 2, 'Churrascaria Palace', 'Restaurante'), --Copacabana RJ
+(36, 2, 'Boteco Belmonte Copacabana', 'Restaurante'), --Copacabana RJ
+(37, 2, 'La Trattoria', 'Restaurante'), --Copacabana RJ
+(38, 2, 'Restaurante Cervantes', 'Restaurante'), --Copacabana RJ
+(39, 3, 'Parraxaxá', 'Restaurante'), --Marco zero PE
+(40, 3, 'Restaurante Leite', 'Restaurante'), --Marco zero PE
+(41, 3, 'Seu Boteco Marco Zero', 'Restaurante'), --Marco zero PE
+(42, 3, 'Bistrô do Cais', 'Restaurante'), --Marco zero PE
+(43, 4, 'Restaurante Porto Canoas', 'Restaurante'), --Cataratas do Iguaçu PR
+(44, 4, 'Rafain Churrascaria Show', 'Restaurante'), --Cataratas do Iguaçu PR
+(45, 4, 'Cabeça de Boi', 'Restaurante'), --Cataratas do Iguaçu PR
+(46, 4, 'Churrascaria do Gaúcho', 'Restaurante'), --Cataratas do Iguaçu PR
+(47, 5, 'Chão Nativo', 'Restaurante'), --Praça Civica GO
+(48, 5, 'Restaurante Piquiras', 'Restaurante'), --Praça Civica GO
+(49, 5, 'Carne de Sol 1008', 'Restaurante'), --Praça Civica GO
+(50, 5, 'Panelinha Grill', 'Restaurante'); --Praça Civica GO
 
