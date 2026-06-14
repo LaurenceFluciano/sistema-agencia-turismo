@@ -1,0 +1,171 @@
+// Cadastro e Gestão de Contatos/Atores
+Table Pessoa {
+  id int [pk]
+  nome varchar(255)
+  telefone varchar(15)
+  email varchar(320)
+  data_cadastro timestamp [default: `now()`]
+  status varchar [default: 'ATIVO']
+  tipo_pessoa char(1) [not null] // 'F' ou 'J'
+  
+  indexes {
+    (id, tipo_pessoa) [unique]
+  }
+}
+
+Table Papel {
+  id int [pk]
+  nome_papel varchar(50) [unique, not null]
+}
+
+Table Pessoa_Papel {
+  id_pessoa int
+  id_papel int
+  indexes {
+    (id_pessoa, id_papel) [pk]
+  }
+}
+
+Table Pessoa_Fisica {
+  id_pessoa int [pk]
+  cpf char(11)
+  data_nascimento date
+  tipo_pessoa char(1) [default: 'F', not null]
+
+  Indexes {
+    (id_pessoa, tipo_pessoa) [unique]
+  }
+}
+
+Table Pessoa_Juridica {
+  id_pessoa int [pk]
+  razao_social varchar(255)
+  cnpj char(14)
+  tipo_pessoa char(1) [default: 'J', not null]
+
+  Indexes {
+    (id_pessoa, tipo_pessoa) [unique]
+  }
+}
+
+// Catálogo Geográfico
+Table Pais {
+  id int [pk]
+  nome varchar(255) [not null]
+}
+
+Table Estado {
+  id int [pk]
+  id_pais int [ref: > Pais.id]
+  nome varchar(255) [not null]
+  sigla char(2)
+}
+
+Table Municipio {
+  id int [pk]
+  id_estado int [ref: > Estado.id]
+  nome varchar(255) [not null]
+}
+
+// Serviços
+Table Tipo_Servico {
+  id int [pk]
+  nome_tipo varchar(255)
+}
+
+Table Servico {
+  id int [pk]
+  nome_oficial varchar(255)
+  id_municipio int [ref: > Municipio.id]
+  data_atualizacao timestamp [default: `now()`]
+  status varchar [default: 'EM_ANALISE']
+  id_tipo int [ref: > Tipo_Servico.id]
+}
+
+Table Fornecedor_Servico {
+  id_pessoa int [ref: > Pessoa.id]
+  id_servico int [ref: > Servico.id]
+  id int [pk]
+  titulo_comercial varchar(256)
+  status varchar [default: 'DISPONIVEL']
+  data_atualizacao timestamp [default: `now()`]
+}
+
+// Módulo Pacotes
+Table Pacote {
+  id int [pk]
+  nome varchar(255)
+  status varchar [default: 'Disponivel']
+}
+
+Table Pacote_Item {
+  id_pacote int [ref: > Pacote.id]
+  id_fornecedor_servico int [ref: > Fornecedor_Servico.id]
+  indexes {
+    (id_pacote, id_fornecedor_servico) [pk]
+  }
+}
+
+// Módulo Reservas e Financeiro
+Table Reserva {
+  id int [pk]
+  id_cliente int [ref: > Pessoa.id]
+  id_pacote int [ref: > Pacote.id]
+  data_inicio_viagem_utc timestamp
+  data_fim_viagem_utc timestamp
+  status varchar
+  preco_total decimal(13,4)
+}
+
+Table Reserva_Item {
+  id_reserva int [ref: > Reserva.id]
+  id_servico_fornecedor int [ref: > Fornecedor_Servico.id]
+  custo_fornecedor decimal(13,4)
+  preco_venda decimal(13,4)
+  status varchar
+  indexes {
+    (id_reserva, id_servico_fornecedor) [pk]
+  }
+}
+
+Table Pagamento {
+  id int [pk]
+  id_reserva int [ref: > Reserva.id]
+  valor decimal(13,4)
+  forma_pagamento varchar(50)
+  status varchar
+  data_pagamento_utc timestamp
+}
+
+// Módulo Organização
+
+Table Passageiro {
+  id_reserva int [ref: > Reserva.id]
+  id_pessoa int [ref: > Pessoa_Fisica.id_pessoa]
+  documento_viagem text
+  indexes {
+    (id_reserva, id_pessoa) [pk]
+  }
+}
+
+Table Itinerario {
+  id int [pk]
+  id_reserva int
+  id_servico_fornecedor int
+  id_municipio int [ref: > Municipio.id]
+  ordem_passo int
+  voucher_codigo varchar(255)
+  data_hora_inicio_utc timestamp
+  data_hora_fim_utc timestamp
+  tipo_evento varchar(255)
+  descricao_evento text
+  status varchar
+}
+
+
+// Relacionamentos adicionais (Composite Keys)
+Ref: Itinerario.(id_reserva, id_servico_fornecedor) > Reserva_Item.(id_reserva, id_servico_fornecedor)
+Ref: Pessoa_Fisica.(id_pessoa, tipo_pessoa) - Pessoa.(id, tipo_pessoa)
+Ref: Pessoa_Juridica.(id_pessoa, tipo_pessoa) - Pessoa.(id, tipo_pessoa)
+Ref: Pessoa_Papel.id_pessoa > Pessoa.id
+Ref: Pessoa_Papel.id_papel > Papel.id
