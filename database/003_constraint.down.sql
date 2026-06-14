@@ -1,0 +1,3 @@
+
+ALTER TABLE "Itinerario" DROP CONSTRAINT IF EXISTS "chk_data_hora" ;
+ALTER TABLE "Reserva" DROP CONSTRAINT IF EXISTS "chk_data" ;
