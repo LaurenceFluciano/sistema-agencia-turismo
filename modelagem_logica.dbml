@@ -48,6 +48,17 @@ Table Pessoa_Juridica {
   }
 }
 
+Table Tipo_Pessoa_Papel {
+  tipo_pessoa char(1)
+  id_papel int
+
+  Note: 'Define quais papéis são permitidos para cada tipo de pessoa (F ou J)'
+
+  Indexes {
+    (tipo_pessoa, id_papel) [pk]
+  }
+}
+
 // Catálogo Geográfico
 Table Pais {
   id int [pk]
@@ -122,7 +133,6 @@ Table Reserva_Item {
   id_servico_fornecedor int [ref: > Fornecedor_Servico.id]
   custo_fornecedor decimal(13,4)
   preco_venda decimal(13,4)
-  status varchar
   indexes {
     (id_reserva, id_servico_fornecedor) [pk]
   }
