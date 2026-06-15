@@ -16,7 +16,7 @@ INSERT INTO "Reserva" (
         1,1, 
         NOW() + INTERVAL '7 days', 
         NOW() + INTERVAL '8 days',
-        'RASCUNHO',
+        'CONFIRMADA',
         0
     ),
     (
