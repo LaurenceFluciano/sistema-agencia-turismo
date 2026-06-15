@@ -169,3 +169,33 @@ BEGIN
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION fn_listar_servicos_por_municipio(p_id_municipio INT)
+RETURNS TABLE (
+    id_servico INT,
+    nome_servico VARCHAR,
+    tipo_servico VARCHAR,
+    status_servico tipo_status_servico,
+    nome_municipio VARCHAR
+) 
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        s."id",
+        s."nome_oficial",
+        ts."nome_tipo",
+        s."status",
+        m."nome"
+    FROM 
+        "Servico" s
+    JOIN 
+        "Municipio" m ON s."id_municipio" = m."id"
+    JOIN 
+        "Tipo_Servico" ts ON s."id_tipo" = ts."id"
+    WHERE 
+        s."id_municipio" = p_id_municipio; 
+END;
+$$;
