@@ -139,3 +139,108 @@ BEGIN
 END;
 $$;
 
+
+CREATE OR REPLACE PROCEDURE
+    pd_criar_oferta_comercial(
+        pd_id_fornecedor INT,
+        pd_nome_servico VARCHAR(255),
+        pd_id_tipo_servico INT,
+        pd_id_municipio INT,
+        pd_titulo_comercial VARCHAR(256)
+    )
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_id_servico INT;
+BEGIN
+
+    SELECT s."id"
+    INTO v_id_servico
+    FROM "Servico" s
+    WHERE s."nome_oficial" = pd_nome_servico
+      AND s."id_tipo" = pd_id_tipo_servico
+      AND s."id_municipio" = pd_id_municipio;
+
+    IF NOT FOUND THEN
+
+        INSERT INTO "Servico" (
+            "nome_oficial",
+            "id_tipo",
+            "id_municipio"
+        )
+        VALUES (
+            pd_nome_servico,
+            pd_id_tipo_servico,
+            pd_id_municipio
+        )
+        RETURNING "id"
+        INTO v_id_servico;
+
+    END IF;
+
+    INSERT INTO "Fornecedor_Servico" (
+        "id_pessoa",
+        "id_servico",
+        "titulo_comercial"
+    )
+    VALUES (
+        pd_id_fornecedor,
+        v_id_servico,
+        pd_titulo_comercial
+    );
+
+END;
+$$;
+
+
+CREATE OR REPLACE PROCEDURE
+    pd_criar_oferta_comercial(
+        pd_id_fornecedor INT,
+        pd_nome_servico VARCHAR(255),
+        pd_id_tipo_servico INT,
+        pd_id_municipio INT,
+        pd_titulo_comercial VARCHAR(256)
+    )
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_id_servico INT;
+BEGIN
+
+    SELECT s."id"
+    INTO v_id_servico
+    FROM "Servico" s
+    WHERE s."nome_oficial" = pd_nome_servico
+      AND s."id_tipo" = pd_id_tipo_servico
+      AND s."id_municipio" = pd_id_municipio;
+
+    IF NOT FOUND THEN
+
+        INSERT INTO "Servico" (
+            "nome_oficial",
+            "id_tipo",
+            "id_municipio"
+        )
+        VALUES (
+            pd_nome_servico,
+            pd_id_tipo_servico,
+            pd_id_municipio
+        )
+        RETURNING "id"
+        INTO v_id_servico;
+
+    END IF;
+
+    INSERT INTO "Fornecedor_Servico" (
+        "id_pessoa",
+        "id_servico",
+        "titulo_comercial"
+    )
+    VALUES (
+        pd_id_fornecedor,
+        v_id_servico,
+        pd_titulo_comercial
+    );
+
+END;
+$$;
