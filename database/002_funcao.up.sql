@@ -199,3 +199,39 @@ BEGIN
         s."id_municipio" = p_id_municipio; 
 END;
 $$;
+
+CREATE OR REPLACE FUNCTION fn_calcular_lucro_periodo(
+    data_inicio DATE,
+    data_fim DATE
+)
+RETURNS DECIMAL(13,4) AS $$
+DECLARE
+    v_lucro_total DECIMAL(13,4) := 0;
+BEGIN
+    SELECT COALESCE(SUM(ri."preco_venda" - ri."custo_fornecedor"), 0)
+    INTO v_lucro_total
+    FROM "Reserva_Item" ri
+    JOIN "Reserva" r ON ri."id_reserva" = r."id"
+    WHERE r."data_inicio_viagem_utc"::DATE BETWEEN data_inicio AND data_fim
+      AND r."status" NOT IN ('RASCUNHO', 'CANCELADA');
+
+    RETURN v_lucro_total;
+END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION fn_calcular_lucro_reserva(
+    p_id_reserva INT
+)
+RETURNS DECIMAL(13,4) AS $$
+DECLARE
+    v_lucro_reserva DECIMAL(13,4) := 0;
+BEGIN
+    SELECT COALESCE(SUM("preco_venda" - "custo_fornecedor"), 0)
+    INTO v_lucro_reserva
+    FROM "Reserva_Item"
+    WHERE "id_reserva" = p_id_reserva;
+
+    RETURN v_lucro_reserva;
+END;
+$$ LANGUAGE plpgsql;

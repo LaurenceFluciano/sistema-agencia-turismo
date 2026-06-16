@@ -15,6 +15,13 @@ DROP FUNCTION IF EXISTS fn_copiar_itens_pacote_para_reserva() CASCADE;
 -- Validação de Regras de Atores/Papéis
 DROP FUNCTION IF EXISTS fn_validar_papel_pessoa() CASCADE;
 
+-- Pegar serviços por id da cidade
+DROP FUNCTION IF EXISTS fn_listar_servicos_por_municipio(INT) CASCADE;
+
+-- Cálculo de juros
+DROP FUNCTION IF EXISTS fn_calcular_lucro_periodo(DATE, DATE) CASCADE;
+DROP FUNCTION IF EXISTS fn_calcular_lucro_reserva(INT) CASCADE;
+
 
 -- ==========================================
 -- 2. FUNÇÕES OPERACIONAIS (UTILITÁRIAS)
