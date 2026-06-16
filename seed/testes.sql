@@ -105,9 +105,19 @@ CALL pd_criar_oferta_comercial(
 
 
 
--- Testando funçções 
+-- Testando funções 
 -- Deve Listar
 SELECT * FROM fn_listar_servicos_por_municipio(5);
+SELECT *
+FROM fn_calcular_lucro_periodo(
+    CURRENT_DATE - 15,
+    CURRENT_DATE + 15
+);
+SELECT * FROM fn_calcular_lucro_reserva(1);
 
 
+-- Testando views
+SELECT * FROM vw_fornecedor_servico_completo;
+SELECT * FROM vw_pacotes_mais_reservados;
+SELECT * FROM vw_relatorio_itinerario_completo;
 

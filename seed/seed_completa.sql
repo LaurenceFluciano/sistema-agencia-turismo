@@ -414,7 +414,7 @@ INSERT INTO "Itinerario" (
     'Café colonial na serra', 
     'AGENDADO'),
 
-(1, 16, 4, 1, 
+(1, 16, 4, 5, 
     'VCH-RES2-TRF', 
     NOW() + INTERVAL '8 days 09:30', 
     NOW() + INTERVAL '8 days 10:30', 
@@ -428,3 +428,40 @@ UPDATE "Reserva" SET
     "data_fim_viagem_utc" = NOW() + INTERVAL '8 days 10:30'
     WHERE "id" = 1;
 
+
+
+INSERT INTO "Pagamento" (
+    "id",
+    "id_reserva",
+    "valor",
+    "forma_pagamento",
+    "status",
+    "data_pagamento_utc"
+)
+VALUES
+(
+    1,
+    1,
+    500.00,
+    'PIX',
+    'PAGO',
+    NOW() - INTERVAL '2 days'
+),
+
+(
+    2,
+    1,
+    300.00,
+    'CARTAO',
+    'PAGO',
+    NOW() - INTERVAL '1 day'
+),
+
+(
+    3,
+    1,
+    200.00,
+    'BOLETO',
+    'PENDENTE',
+    NOW() - INTERVAL '10 days'
+);

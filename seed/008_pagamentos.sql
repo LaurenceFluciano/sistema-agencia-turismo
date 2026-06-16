@@ -31,6 +31,6 @@ VALUES
     1,
     200.00,
     'BOLETO',
-    'PENDETE',
+    'PENDENTE',
     NOW() - INTERVAL '10 days'
 );

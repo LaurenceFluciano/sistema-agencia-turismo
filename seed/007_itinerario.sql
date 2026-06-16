@@ -49,7 +49,7 @@ INSERT INTO "Itinerario" (
     'Café colonial na serra', 
     'AGENDADO'),
 
-(1, 16, 4, 1, 
+(1, 16, 4, 5, 
     'VCH-RES2-TRF', 
     NOW() + INTERVAL '8 days 09:30', 
     NOW() + INTERVAL '8 days 10:30', 
