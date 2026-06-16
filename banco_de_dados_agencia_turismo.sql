@@ -316,35 +316,22 @@ ALTER TABLE "Reserva_Item"
 ADD COLUMN "percentual_desconto_venda" NUMERIC(5,2) DEFAULT 0;
 
 
--- ==========================================
--- 1. FUNÇÕES DE NEGÓCIO
--- ==========================================
+/**
+* FUNCOES
+*/
 
--- Controle Financeiro e Status da Reserva
 DROP FUNCTION IF EXISTS fn_marcar_reserva_como_concluido_ou_em_atraso() CASCADE;
-
--- Cálculo de Totais da Reserva (Disparada por itens da reserva)
 DROP FUNCTION IF EXISTS fn_atualizar_total_reserva() CASCADE;
-
--- Gerenciamento de Itens Vinculados a Pacotes
 DROP FUNCTION IF EXISTS fn_remover_itens_pacote_da_reserva() CASCADE;
 DROP FUNCTION IF EXISTS fn_copiar_itens_pacote_para_reserva() CASCADE;
-
--- Validação de Regras de Atores/Papéis
 DROP FUNCTION IF EXISTS fn_validar_papel_pessoa() CASCADE;
+DROP FUNCTION IF EXISTS fn_listar_servicos_por_municipio(INT) CASCADE;
+DROP FUNCTION IF EXISTS fn_calcular_lucro_periodo(DATE, DATE) CASCADE;
+DROP FUNCTION IF EXISTS fn_calcular_lucro_reserva(INT) CASCADE;
 
-
--- ==========================================
--- 2. FUNÇÕES OPERACIONAIS (UTILITÁRIAS)
--- ==========================================
 
 DROP FUNCTION IF EXISTS fn_atualiza_data_atualizacao() CASCADE;
-
 DROP FUNCTION IF EXISTS fn_validar_periodo(anyelement, anyelement) CASCADE;
-
-/**
-* FUNCOES OPERACIONAIS
-*/
 
 -- Função responsável por validar periodos de datas
 CREATE OR REPLACE FUNCTION fn_validar_periodo(data_hora_inicio ANYELEMENT, data_hora_fim ANYELEMENT)
@@ -366,22 +353,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-
-/**
-* FUNCOES DE NEGOCIO
-*/
-
-
-/*******************************\
-* GESTAO DE CADASTRO DE ATORES *
-\*******************************/
-
-
-
-/* Regra de Negócio - Papel da Pessoa
-* 1 - Uma pessoa física pode ser um cliente ou fornecedor.
-* 2 - Uma pessoa jurídica pode ser um cliente, fornecedor ou empresa.
-*/
 
 CREATE OR REPLACE FUNCTION 
 fn_validar_papel_pessoa()
@@ -514,6 +485,72 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+
+CREATE OR REPLACE FUNCTION fn_listar_servicos_por_municipio(p_id_municipio INT)
+RETURNS TABLE (
+    id_servico INT,
+    nome_servico VARCHAR,
+    tipo_servico VARCHAR,
+    status_servico tipo_status_servico,
+    nome_municipio VARCHAR
+) 
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        s."id",
+        s."nome_oficial",
+        ts."nome_tipo",
+        s."status",
+        m."nome"
+    FROM 
+        "Servico" s
+    JOIN 
+        "Municipio" m ON s."id_municipio" = m."id"
+    JOIN 
+        "Tipo_Servico" ts ON s."id_tipo" = ts."id"
+    WHERE 
+        s."id_municipio" = p_id_municipio; 
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION fn_calcular_lucro_periodo(
+    data_inicio DATE,
+    data_fim DATE
+)
+RETURNS DECIMAL(13,4) AS $$
+DECLARE
+    v_lucro_total DECIMAL(13,4) := 0;
+BEGIN
+    SELECT COALESCE(SUM(ri."preco_venda" - ri."custo_fornecedor"), 0)
+    INTO v_lucro_total
+    FROM "Reserva_Item" ri
+    JOIN "Reserva" r ON ri."id_reserva" = r."id"
+    WHERE r."data_inicio_viagem_utc"::DATE BETWEEN data_inicio AND data_fim
+      AND r."status" NOT IN ('RASCUNHO', 'CANCELADA');
+
+    RETURN v_lucro_total;
+END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION fn_calcular_lucro_reserva(
+    p_id_reserva INT
+)
+RETURNS DECIMAL(13,4) AS $$
+DECLARE
+    v_lucro_reserva DECIMAL(13,4) := 0;
+BEGIN
+    SELECT COALESCE(SUM("preco_venda" - "custo_fornecedor"), 0)
+    INTO v_lucro_reserva
+    FROM "Reserva_Item"
+    WHERE "id_reserva" = p_id_reserva;
+
+    RETURN v_lucro_reserva;
+END;
+$$ LANGUAGE plpgsql;
+
 ALTER TABLE "Itinerario" DROP CONSTRAINT IF EXISTS "chk_data_hora" ;
 ALTER TABLE "Reserva" DROP CONSTRAINT IF EXISTS "chk_data" ;
 
@@ -589,6 +626,8 @@ FOR EACH ROW
 EXECUTE FUNCTION fn_marcar_reserva_como_concluido_ou_em_atraso();
 
 
+/* PROCEDURES */
+
 DROP PROCEDURE IF EXISTS pd_definir_preco_da_reserva(
     INT,
     INT,
@@ -596,10 +635,31 @@ DROP PROCEDURE IF EXISTS pd_definir_preco_da_reserva(
     NUMERIC(5,2)
 );
 
-DROP PROCEDURE IF EXISTS     pd_adicionar_passageiro_na_viagem(
+DROP PROCEDURE IF EXISTS pd_adicionar_passageiro_na_viagem(
     VARCHAR(255),
     INT
 );
+
+DROP PROCEDURE IF EXISTS pd_criar_oferta_comercial(
+    INT,
+    VARCHAR(255),
+    INT,
+    INT,
+    VARCHAR(256)
+);
+
+DROP PROCEDURE IF EXISTS pd_cadastrar_cliente(
+    VARCHAR(255),
+    VARCHAR(15),
+    VARCHAR(320),
+    CHAR(1),
+    CHAR(11),
+    DATE,
+    VARCHAR(255),
+    CHAR(14)
+);
+
+DROP PROCEDURE IF EXISTS pd_rotina_cancelar_pagamentos_vencidos();
 
 
 CREATE OR REPLACE PROCEDURE pd_definir_preco_da_reserva(
@@ -659,3 +719,209 @@ BEGIN
 END;
 $$;
 
+
+CREATE OR REPLACE PROCEDURE pd_rotina_cancelar_pagamentos_vencidos()
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    UPDATE "Reserva"
+    SET "status" = 'CANCELADA'::tipo_status_reserva
+    WHERE "id" IN (
+        SELECT "id_reserva" 
+        FROM "Pagamento" 
+        WHERE "status" = 'PENDENTE'::tipo_status_pagamento 
+          AND "data_pagamento_utc" < NOW()
+    );
+    
+    UPDATE "Pagamento"
+    SET "status" = 'VENCIDO'::tipo_status_pagamento
+    WHERE "status" = 'PENDENTE'::tipo_status_pagamento 
+      AND "data_pagamento_utc" < NOW();
+
+
+    RAISE NOTICE 'Rotina concluída: Pagamentos atrasados e suas respectivas reservas foram devidamente cancelados.';
+END;
+$$;
+
+
+CREATE OR REPLACE PROCEDURE pd_cadastrar_cliente(
+    p_nome VARCHAR(255),
+    p_telefone VARCHAR(15),
+    p_email VARCHAR(320),
+    p_tipo_pessoa CHAR(1),
+    p_cpf CHAR(11) DEFAULT NULL,
+    p_data_nascimento DATE DEFAULT NULL,
+    p_razao_social VARCHAR(255) DEFAULT NULL,
+    p_cnpj CHAR(14) DEFAULT NULL
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_id_pessoa INT;
+    v_id_papel_cliente INT;
+BEGIN
+    SELECT "id" INTO v_id_papel_cliente 
+    FROM "Papel" 
+    WHERE "nome_papel" = 'Cliente';
+    
+    IF v_id_papel_cliente IS NULL THEN
+        RAISE EXCEPTION 'Erro crítico: O papel ''Cliente'' não foi localizado na tabela Papel.';
+    END IF;
+
+
+    INSERT INTO "Pessoa" ("nome", "telefone", "email", "tipo_pessoa")
+    VALUES (p_nome, p_telefone, p_email, p_tipo_pessoa)
+    RETURNING "id" INTO v_id_pessoa;
+
+    IF p_tipo_pessoa = 'F' THEN
+
+        IF p_cpf IS NULL THEN
+            RAISE EXCEPTION 'Para cadastrar Pessoa Física (F), o parâmetro de CPF é obrigatório.';
+        END IF;
+        
+        INSERT INTO "Pessoa_Fisica" ("id_pessoa", "cpf", "data_nascimento", "tipo_pessoa")
+        VALUES (v_id_pessoa, p_cpf, p_data_nascimento, 'F');
+        
+    ELSIF p_tipo_pessoa = 'J' THEN
+        
+        IF p_cnpj IS NULL OR p_razao_social IS NULL THEN
+            RAISE EXCEPTION 'Para cadastrar Pessoa Jurídica (J), CNPJ e Razão Social são obrigatórios.';
+        END IF;
+        
+        INSERT INTO "Pessoa_Juridica" ("id_pessoa", "razao_social", "cnpj", "tipo_pessoa")
+        VALUES (v_id_pessoa, p_razao_social, p_cnpj, 'J');
+    ELSE
+        RAISE EXCEPTION 'Tipo de pessoa inválido. Utilize ''F'' para Física ou ''J'' para Jurídica.';
+    END IF;
+
+
+    INSERT INTO "Pessoa_Papel" ("id_pessoa", "id_papel")
+    VALUES (v_id_pessoa, v_id_papel_cliente);
+
+    RAISE NOTICE 'Cliente % cadastrado com sucesso! ID gerado: %', p_nome, v_id_pessoa;
+END;
+$$;
+
+
+CREATE OR REPLACE PROCEDURE
+    pd_criar_oferta_comercial(
+        pd_id_fornecedor INT,
+        pd_nome_servico VARCHAR(255),
+        pd_id_tipo_servico INT,
+        pd_id_municipio INT,
+        pd_titulo_comercial VARCHAR(256)
+    )
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_id_servico INT;
+BEGIN
+
+    SELECT s."id"
+    INTO v_id_servico
+    FROM "Servico" s
+    WHERE s."nome_oficial" = pd_nome_servico
+      AND s."id_tipo" = pd_id_tipo_servico
+      AND s."id_municipio" = pd_id_municipio;
+
+    IF NOT FOUND THEN
+
+        INSERT INTO "Servico" (
+            "nome_oficial",
+            "id_tipo",
+            "id_municipio"
+        )
+        VALUES (
+            pd_nome_servico,
+            pd_id_tipo_servico,
+            pd_id_municipio
+        )
+        RETURNING "id"
+        INTO v_id_servico;
+
+    END IF;
+
+    INSERT INTO "Fornecedor_Servico" (
+        "id_pessoa",
+        "id_servico",
+        "titulo_comercial"
+    )
+    VALUES (
+        pd_id_fornecedor,
+        v_id_servico,
+        pd_titulo_comercial
+    );
+
+END;
+$$;
+
+
+/**
+* VIEWS
+*/
+
+DROP VIEW IF EXISTS vw_fornecedor_servico_completo CASCADE;
+
+DROP VIEW IF EXISTS vw_relatorio_itinerario_completo CASCADE;
+
+DROP VIEW IF EXISTS vw_pacotes_mais_reservados CASCADE;
+
+CREATE OR REPLACE VIEW vw_fornecedor_servico_completo AS
+SELECT 
+    fs."id" AS id_fornecedor_servico,
+    fs."titulo_comercial" AS nome_comercial,
+    p."nome" AS nome_fornecedor_parceiro,
+    s."nome_oficial" AS nome_oficial_servico,
+    ts."nome_tipo" AS tipo_servico,
+    fs."status" AS status_fornecedor,
+    m."nome" AS municipio_cidade,
+    e."nome" AS nome_estado,
+    e."sigla" AS sigla_estado
+FROM 
+    "Fornecedor_Servico" fs
+JOIN 
+    "Pessoa" p ON fs."id_pessoa" = p."id"
+JOIN 
+    "Servico" s ON fs."id_servico" = s."id"
+JOIN 
+    "Tipo_Servico" ts ON s."id_tipo" = ts."id"
+JOIN 
+    "Municipio" m ON s."id_municipio" = m."id"
+JOIN 
+    "Estado" e ON m."id_estado" = e."id";
+
+
+CREATE OR REPLACE VIEW vw_relatorio_itinerario_completo AS
+SELECT 
+    i."id" AS itinerario_id,
+    r."id" AS reserva_id,
+    p."nome" AS nome_cliente,
+    s."nome_oficial" AS nome_servico,
+    m."nome" AS nome_municipio,
+    i."ordem_passo",
+    i."voucher_codigo",
+    i."data_hora_inicio_utc",
+    i."data_hora_fim_utc",
+    i."tipo_evento",
+    i."descricao_evento",
+    i."status" AS status_itinerario
+FROM "Itinerario" i
+JOIN "Reserva" r ON i."id_reserva" = r."id"
+JOIN "Pessoa" p ON r."id_cliente" = p."id"
+JOIN "Reserva_Item" ri ON i."id_reserva" = ri."id_reserva" 
+                      AND i."id_fornecedor_servico" = ri."id_fornecedor_servico"
+JOIN "Fornecedor_Servico" fs ON ri."id_fornecedor_servico" = fs."id"
+JOIN "Servico" s ON fs."id_servico" = s."id"
+JOIN "Municipio" m ON i."id_municipio" = m."id";
+
+CREATE OR REPLACE VIEW vw_pacotes_mais_reservados AS
+SELECT 
+    pa."id" AS pacote_id,
+    pa."nome" AS nome_pacote,
+    COUNT(r."id") AS total_reservas,
+    SUM(r."preco_total") AS receita_total_gerada
+FROM "Pacote" pa
+JOIN "Reserva" r ON r."id_pacote" = pa."id"
+WHERE r."status" NOT IN ('CANCELADA', 'RASCUNHO') 
+GROUP BY pa."id", pa."nome"
+ORDER BY total_reservas DESC;
