@@ -30,10 +30,9 @@ CREATE TYPE tipo_status_pagamento AS ENUM (
   'VENCIDO'
 );
 CREATE TYPE tipo_status_fornecedor_servico AS ENUM (
-  'DISPONIVEL',
+  'ATIVO',
   'PAUSADO',
-  'ENCERRADA',
-  'CANCELADA'
+  'ENCERRADA'
 );
 CREATE TYPE tipo_status_itinerario AS ENUM (
   'RASCUNHO',
@@ -172,7 +171,7 @@ CREATE TABLE "Fornecedor_Servico" (
   "id_pessoa" INT NOT NULL,
   "id_servico" INT NOT NULL,
   "titulo_comercial" VARCHAR(256),
-  "status" tipo_status_fornecedor_servico DEFAULT 'DISPONIVEL',
+  "status" tipo_status_fornecedor_servico DEFAULT 'ATIVO',
   "data_atualizacao" TIMESTAMP DEFAULT NOW(),
 
   CONSTRAINT "pk_fornecedor_servico" PRIMARY KEY ("id")
@@ -201,7 +200,7 @@ CREATE TABLE "Pacote_Item" (
 
 CREATE TABLE "Reserva" (
   "id" SERIAL,
-  "id_cliente" INT,
+  "id_cliente" INT NOT NULL,
   "id_pacote" INT,
   "data_inicio_viagem_utc" TIMESTAMP,
   "data_fim_viagem_utc" TIMESTAMP,
@@ -925,3 +924,14 @@ JOIN "Reserva" r ON r."id_pacote" = pa."id"
 WHERE r."status" NOT IN ('CANCELADA', 'RASCUNHO') 
 GROUP BY pa."id", pa."nome"
 ORDER BY total_reservas DESC;
+
+-- 007
+
+ALTER TABLE "Fornecedor_Servico" DROP COLUMN IF EXISTS "provedor_nome"; -- ex: 'BOOKING_API', 'SABRE_V_API', 'PROPRIO'
+ALTER TABLE "Fornecedor_Servico" DROP COLUMN IF EXISTS "codigo_id_externo"; -- ex: 'hotel_xyz_7761'
+ALTER TABLE "Reserva" DROP COLUMN IF EXISTS "orcamento";
+
+
+ALTER TABLE "Fornecedor_Servico" ADD COLUMN "provedor_nome" VARCHAR(50); -- ex: 'BOOKING_API', 'SABRE_V_API', 'PROPRIO'
+ALTER TABLE "Fornecedor_Servico" ADD COLUMN "codigo_id_externo" VARCHAR(255); -- ex: 'hotel_xyz_7761'
+ALTER TABLE "Reserva" ADD COLUMN "orcamento" DECIMAL(13,4);

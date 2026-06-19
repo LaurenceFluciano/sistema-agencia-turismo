@@ -21,10 +21,9 @@ CREATE TYPE tipo_status_pagamento AS ENUM (
   'VENCIDO'
 );
 CREATE TYPE tipo_status_fornecedor_servico AS ENUM (
-  'DISPONIVEL',
+  'ATIVO',
   'PAUSADO',
-  'ENCERRADA',
-  'CANCELADA'
+  'ENCERRADA'
 );
 CREATE TYPE tipo_status_itinerario AS ENUM (
   'RASCUNHO',

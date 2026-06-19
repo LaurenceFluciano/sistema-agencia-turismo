@@ -99,7 +99,7 @@ CREATE TABLE "Fornecedor_Servico" (
   "id_pessoa" INT NOT NULL,
   "id_servico" INT NOT NULL,
   "titulo_comercial" VARCHAR(256),
-  "status" tipo_status_fornecedor_servico DEFAULT 'DISPONIVEL',
+  "status" tipo_status_fornecedor_servico DEFAULT 'ATIVO',
   "data_atualizacao" TIMESTAMP DEFAULT NOW(),
 
   CONSTRAINT "pk_fornecedor_servico" PRIMARY KEY ("id")
@@ -128,7 +128,7 @@ CREATE TABLE "Pacote_Item" (
 
 CREATE TABLE "Reserva" (
   "id" SERIAL,
-  "id_cliente" INT,
+  "id_cliente" INT NOT NULL,
   "id_pacote" INT,
   "data_inicio_viagem_utc" TIMESTAMP,
   "data_fim_viagem_utc" TIMESTAMP,
