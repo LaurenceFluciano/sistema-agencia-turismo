@@ -1,3 +1,5 @@
+'use server'
+
 import sql from "../db";
 
 
@@ -24,4 +26,37 @@ async function listClients(filters) {
     return clientes;
 }
 
-export default listClients;
+async function registerClient(clientData) {
+    try {
+        const nome = clientData.nome || null;
+        const telefone = clientData.telefone || null;
+        const email = clientData.email || null;
+        const tipo_pessoa = clientData.pessoa || "F";
+
+        const cpf = clientData.cpf || null;
+        const data_nascimento = clientData.data_nascimento || null;
+        const razao_social = clientData.razao_social || null;
+        const cnpj = clientData.cnpj || null;
+
+        await sql`
+            CALL pd_cadastrar_cliente(
+                ${nome}, 
+                ${telefone}, 
+                ${email}, 
+                ${tipo_pessoa}, 
+                ${cpf}, 
+                ${data_nascimento}, 
+                ${razao_social}, 
+                ${cnpj}
+            )
+        `;
+
+        return { success: true, message: "Cliente cadastrado com sucesso!" };
+
+    } catch (error) {
+        console.error("Erro ao executar procedure:", error.message);
+        return { success: false, error: error.message };
+    }
+}
+
+export { listClients, registerClient };

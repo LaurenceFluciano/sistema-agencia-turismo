@@ -1,5 +1,5 @@
 import buildPersonFilters from "@/services/clientes/client.filter";
-import listClients from "@/services/clientes/client.repository";
+import { listClients } from "@/services/clientes/client.repository"
 import ClientCard from "@/components/organism/ClientCard";
 import RegisterClientDialog from "@/components/organism/RegisterClientDialog";
 

@@ -3,7 +3,6 @@ import {
   Dialog,
   DialogClose,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -22,26 +21,67 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useState } from "react"
-
+import { registerClient } from "@/services/clientes/client.repository"
+import { CheckCircle2, AlertCircle } from "lucide-react"
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from "@/components/ui/alert"
 
 export default function RegisterClientDialog({ className }) {
     const [alignItemWithTrigger, setAlignItemWithTrigger] = useState(true)
+    const [error, setError] = useState(null)
+    const [sucess, setSucess] = useState(null)
+    
+    const [tipoPessoa, setTipoPessoa] = useState("F")
 
+    const handleSubmit = async (e) => {
+        e.preventDefault()
+        setError(null)
+        setSucess(null)
 
-    const [clientData, setClientData] = useState({})
+        const formData = new FormData(e.currentTarget);
+        const data = Object.fromEntries(formData.entries());
 
+        data.pessoa = tipoPessoa;
+
+        const result = await registerClient(data)
+
+        if(result.success) {
+            setSucess(result.message)
+        } else {
+            setError(result.error)
+        }
+    } 
 
     return (
         <Dialog>
-            <form className={className}>
-                <DialogTrigger asChild>
-                    <Button variant="outline">Cadastrar Cliente</Button>
-                </DialogTrigger>
+            <DialogTrigger className={className} asChild>
+                <Button variant="outline">Cadastrar Cliente</Button>
+            </DialogTrigger>
 
-                <DialogContent className="md:max-w-180 max-w-sm">
+            <DialogContent className="md:max-w-180 max-w-sm">
+                <form onSubmit={handleSubmit}>
                     <DialogHeader className="px-8 py-4">
                         <DialogTitle className="text-2xl font-bold">Cadastrar Cliente</DialogTitle>
                     </DialogHeader>
+                    <div className="px-8 pt-4 space-y-2">
+                        {error && (
+                            <Alert variant="destructive" className="w-full">
+                                <AlertCircle className="h-4 w-4" />
+                                <AlertTitle>Erro ao cadastrar</AlertTitle>
+                                <AlertDescription>{error}</AlertDescription>
+                            </Alert>
+                        )}
+                        {sucess && (
+                            <Alert className="w-full border-green-500 text-green-600 [&>svg]:text-green-600">
+                                <CheckCircle2 className="h-4 w-4" />
+                                <AlertTitle>Sucesso</AlertTitle>
+                                <AlertDescription>{sucess}</AlertDescription>
+                            </Alert>
+                        )}
+                    </div>
                     <FieldGroup className="px-8 py-4 gap-8 grid md:grid-cols-2">
                         <Field>
                             <Label htmlFor="nome">Nome: <span className="text-destructive">*</span></Label>
@@ -53,11 +93,21 @@ export default function RegisterClientDialog({ className }) {
                             />
                         </Field>
                         <Field>
+                            <Label htmlFor="cpf">CPF:</Label>
+                            <Input 
+                                id="cpf" 
+                                name="cpf" 
+                                placeholder="CPF"
+                                required
+                            />
+                        </Field>
+                        <Field>
                             <Label htmlFor="email">Email:</Label>
                             <Input 
                                 id="email" 
                                 name="email" 
                                 placeholder="Email" 
+                                type="email"
                             />
                         </Field>
                         <Field>
@@ -69,9 +119,9 @@ export default function RegisterClientDialog({ className }) {
                             />
                         </Field>
                         <Field>
-                            <Label name="pessoa">Pessoa:</Label>
-                            <Select defaultValue="F">
-                                <SelectTrigger>
+                            <Label htmlFor="pessoa">Pessoa:</Label>
+                            <Select value={tipoPessoa} onValueChange={setTipoPessoa}>
+                                <SelectTrigger id="pessoa">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent
@@ -88,12 +138,12 @@ export default function RegisterClientDialog({ className }) {
 
                     <DialogFooter className="mt-8">
                         <DialogClose asChild>
-                            <Button variant="outline">Cancelar</Button>
+                            <Button variant="outline" type="button">Cancelar</Button>
                         </DialogClose>
                         <Button type="submit">Cadastrar</Button>
                     </DialogFooter>
-                </DialogContent>
-            </form>
+                </form>
+            </DialogContent>
         </Dialog>
     )
 }
