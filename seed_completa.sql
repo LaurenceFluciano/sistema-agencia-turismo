@@ -1,4 +1,6 @@
 
+-- Início da Seed: 000_base.sql
+
 INSERT INTO "Papel" ("nome_papel") 
 VALUES  ('Cliente'),
         ('Fornecedor'),
@@ -35,8 +37,7 @@ VALUES  ('F',1),
         ('J',2),
         ('J',3);
 
-
-
+-- Início da Seed: 001_pessoa.sql
 TRUNCATE TABLE
   "Pessoa_Papel", "Pessoa_Fisica", "Pessoa_Juridica", "Pessoa"
 CASCADE;
@@ -45,7 +46,7 @@ INSERT INTO "Pessoa" (
     "nome",
     "telefone",
     "email",
-    "tipo_pessoa"
+    "tipo"
 ) VALUES
 ('Joao Luciano', '48999990001', 'joaoluciano@unisatc.com', 'F'),
 ('Ana Silva', '48999990002', 'ana@email.com', 'F'),
@@ -62,7 +63,7 @@ INSERT INTO "Pessoa"(
     "nome",
     "telefone",
     "email",
-    "tipo_pessoa"
+    "tipo"
 ) VALUES 
 ('Copacabana Consolidadora', '1133330001', 'contato@copacabana.com.br', 'J'),
 ('Jequitibá Distribuição',   '2133330002', 'comercial@jequitiba.com.br', 'J'),
@@ -116,7 +117,7 @@ INSERT INTO "Pessoa_Papel" (
 (14, 2),
 (15, 2);
 
-
+-- Início da Seed: 002_local.sql
 INSERT INTO "Pais" ("nome") VALUES ('Brasil');
 
 INSERT INTO "Estado" ("id_pais", "nome", "sigla") VALUES
@@ -133,6 +134,7 @@ INSERT INTO "Municipio" ("id_estado", "nome") VALUES
 (4, 'Foz do Iguaçu'),
 (5, 'Goiânia');
 
+-- Início da Seed: 003_servico.sql
 INSERT INTO "Servico" (
     "id_municipio",
     "nome_oficial",
@@ -191,7 +193,7 @@ VALUES
     (5, 'Carne de Sol 1008', 7, 'ATIVO'),
     (5, 'Panelinha Grill', 7, 'ATIVO');
 
-
+-- Início da Seed: 004_fornecedor_servico.sql
 INSERT INTO "Fornecedor_Servico" (
     "id_pessoa",
     "id_servico",
@@ -263,6 +265,7 @@ INSERT INTO "Fornecedor_Servico" (
 (11, 49, 'Especial Carne de Sol 1008', 'ATIVO'),
 (11, 50, 'Almoço Panelinha Grill', 'ATIVO');
 
+-- Início da Seed: 005_pacote.sql
 
 INSERT INTO "Pacote" (
     "nome", 
@@ -293,6 +296,7 @@ VALUES
     (1, 32);  -- Café Colonial da Montanha
 
 
+-- Início da Seed: 006_reserva_com_pacotes.sql
 DELETE FROM "Reserva_Item";
 DELETE FROM "Reserva";
 ALTER SEQUENCE "Reserva_id_seq" RESTART WITH 1;
@@ -363,6 +367,7 @@ CALL pd_adicionar_passageiro_na_viagem('Juliana Costa', 3);
 
 
 
+-- Início da Seed: 007_itinerario.sql
 INSERT INTO "Itinerario" (
   "id_reserva",
   "id_fornecedor_servico",
@@ -429,6 +434,7 @@ UPDATE "Reserva" SET
     WHERE "id" = 1;
 
 
+-- Início da Seed: 008_pagamentos.sql
 
 INSERT INTO "Pagamento" (
     "id",

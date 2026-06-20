@@ -6,7 +6,7 @@ INSERT INTO "Pessoa" (
     "nome",
     "telefone",
     "email",
-    "tipo_pessoa"
+    "tipo"
 ) VALUES
 ('Joao Luciano', '48999990001', 'joaoluciano@unisatc.com', 'F'),
 ('Ana Silva', '48999990002', 'ana@email.com', 'F'),
@@ -23,7 +23,7 @@ INSERT INTO "Pessoa"(
     "nome",
     "telefone",
     "email",
-    "tipo_pessoa"
+    "tipo"
 ) VALUES 
 ('Copacabana Consolidadora', '1133330001', 'contato@copacabana.com.br', 'J'),
 ('Jequitibá Distribuição',   '2133330002', 'comercial@jequitiba.com.br', 'J'),

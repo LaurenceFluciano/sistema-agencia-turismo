@@ -1,6 +1,17 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+'use client'
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Mail, Phone, FileText } from "lucide-react";
+import { Mail, Phone, FileText, Ellipsis } from "lucide-react";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu"
+import { deleteClient } from "@/services/clientes/client.repository";
+
+import { useRouter } from "next/navigation"
+import ClientDialog from "./ClientDialog";
 
 export default function ClientCard({
     cliente
@@ -9,12 +20,20 @@ export default function ClientCard({
         return name ? name.split(" ").map(n => n[0]).slice(0, 2).join("").toUpperCase() : "CL";
     };
 
+    const router = useRouter()
+
     const isAtivo = cliente.status?.toLowerCase() === "ativo";
+
+    const remove = async () => {
+      await deleteClient(cliente.id)
+
+      router.refresh();
+    }
 
     return (
          <Card className="overflow-hidden transition-all duration-200 hover:shadow-md border-border">
              
-              <CardHeader className="flex flex-row items-center gap-4 pb-4 border-b border-border bg-muted/20">
+              <CardHeader className="flex flex-row items-center gap-4 py-4 mb-auto border-b border-border bg-muted/20">
                 <Avatar className="h-12 w-12 border border-border">
 
                   <AvatarFallback className="bg-muted text-muted-foreground font-semibold text-sm">
@@ -40,30 +59,65 @@ export default function ClientCard({
                 </div>
               </CardHeader>
 
-              <CardContent className="pt-5 space-y-3 text-sm text-muted-foreground">
-                {cliente.email && (
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <Mail className="h-4 w-4 shrink-0 text-muted-foreground/70" />
-                    <span className="truncate text-card-foreground">{cliente.email}</span>
-                  </div>
-                )}
-                
-                {cliente.telefone && (
-                  <div className="flex items-center gap-2.5">
-                    <Phone className="h-4 w-4 shrink-0 text-muted-foreground/70" />
-                    <span className="text-card-foreground">{cliente.telefone}</span>
-                  </div>
-                )}
-                
-                {(cliente.cpf || cliente.cnpj) && (
-                  <div className="flex items-center gap-2.5 pt-2 border-t border-border text-xs font-mono">
-                    <FileText className="h-4 w-4 shrink-0 text-muted-foreground/70" />
-                    <span>
-                      {cliente.cpf ? `CPF: ${cliente.cpf}` : `CNPJ: ${cliente.cnpj}`}
-                    </span>
-                  </div>
-                )}
+              <CardContent className="space-y-2 text-sm text-muted-foreground">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  {cliente.email ? (
+                    <>
+                      <Mail className="h-4 w-4 shrink-0 text-muted-foreground/70" />
+                      <span className="truncate text-card-foreground">{cliente.email}</span>
+                    </>
+                  ) : (
+                    <p className="text-xs text-muted-foreground italic">Email não informado</p>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2.5">
+                  {cliente.telefone ? (
+                    <>
+                      <Phone className="h-4 w-4 shrink-0 text-muted-foreground/70" />
+                      <span className="text-card-foreground">{cliente.telefone}</span>
+                    </>
+                  ) : (
+                    <p className="text-xs text-muted-foreground italic">Telefone não informado</p>
+                  )}
+                </div>
+
+
+                <div className="flex items-center gap-2.5 pt-2 border-t border-border text-xs font-mono">
+                  {(cliente.cpf || cliente.cnpj) ? (
+                    <>
+                      <FileText className="h-4 w-4 shrink-0 text-muted-foreground/70" />
+                      <span>
+                        {cliente.cpf ? `CPF: ${cliente.cpf}` : `CNPJ: ${cliente.cnpj}`}
+                      </span>
+                    </>
+                  ) : (
+                    <p className="text-xs text-muted-foreground italic">CPF não informado</p>
+                  )}
+                </div>
               </CardContent>
+              <CardFooter className="mt-auto">
+                <DropdownMenu>
+                  <DropdownMenuTrigger className="ml-auto">
+                    <Ellipsis className="cursor-pointer" />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent side="bottom" align="end" sideOffset={5}>
+                    <DropdownMenuItem onSelect={(e) => e.preventDefault()}> 
+                      <ClientDialog 
+                          cliente={cliente} 
+                          trigger={<button className="w-full text-left">Editar</button>} 
+                      />
+                    </DropdownMenuItem>
+
+                    <DropdownMenuItem 
+                      className="text-red-400" 
+                      onClick={remove}
+                    >
+                      Excluir
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </CardFooter>
             </Card>
     )
 }

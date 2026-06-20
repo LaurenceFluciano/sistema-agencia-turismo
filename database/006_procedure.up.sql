@@ -38,12 +38,12 @@ LANGUAGE plpgsql AS $$
 DECLARE
     v_id_pessoa INT;
 BEGIN
-    INSERT INTO "Pessoa" ("nome","tipo_pessoa") 
+    INSERT INTO "Pessoa" ("nome","tipo") 
     VALUES (pd_nome, 'F')
     RETURNING "id" INTO v_id_pessoa;
 
-    INSERT INTO "Pessoa_Fisica" ("id_pessoa","tipo_pessoa") 
-    VALUES (v_id_pessoa, 'F');
+    INSERT INTO "Pessoa_Fisica" ("id_pessoa") 
+    VALUES (v_id_pessoa);
 
     INSERT INTO "Passageiro" (
         "id_reserva",
@@ -79,12 +79,11 @@ BEGIN
 END;
 $$;
 
-
 CREATE OR REPLACE PROCEDURE pd_cadastrar_cliente(
     p_nome VARCHAR(255),
     p_telefone VARCHAR(15),
     p_email VARCHAR(320),
-    p_tipo_pessoa CHAR(1),
+    p_tipo CHAR(1),
     p_cpf CHAR(11) DEFAULT NULL,
     p_data_nascimento DATE DEFAULT NULL,
     p_razao_social VARCHAR(255) DEFAULT NULL,
@@ -105,36 +104,41 @@ BEGIN
     END IF;
 
 
-    INSERT INTO "Pessoa" ("nome", "telefone", "email", "tipo_pessoa")
-    VALUES (p_nome, p_telefone, p_email, p_tipo_pessoa)
+    INSERT INTO "Pessoa" ("nome", "telefone", "email", "tipo")
+    VALUES (p_nome, p_telefone, p_email, p_tipo)
     RETURNING "id" INTO v_id_pessoa;
 
-    IF p_tipo_pessoa = 'F' THEN
 
-        IF p_cpf IS NULL THEN
-            RAISE EXCEPTION 'Para cadastrar Pessoa Física (F), o parâmetro de CPF é obrigatório.';
+    IF p_tipo = 'F' THEN
+        IF p_cpf IS NOT NULL THEN
+            IF EXISTS (SELECT 1 FROM "Pessoa_Fisica" WHERE "cpf" = p_cpf) THEN
+                RAISE EXCEPTION 'Já existe uma Pessoa Física cadastrada com este CPF.';
+            END IF;
+            
+            IF LENGTH(TRIM(p_cpf)) != 11 THEN
+                RAISE EXCEPTION 'O CPF deve conter 11 dígitos.';
+            END IF;
         END IF;
         
-        INSERT INTO "Pessoa_Fisica" ("id_pessoa", "cpf", "data_nascimento", "tipo_pessoa")
-        VALUES (v_id_pessoa, p_cpf, p_data_nascimento, 'F');
+        INSERT INTO "Pessoa_Fisica" ("id_pessoa", "cpf", "data_nascimento")
+        VALUES (v_id_pessoa, p_cpf, p_data_nascimento);
         
-    ELSIF p_tipo_pessoa = 'J' THEN
-        
+    ELSIF p_tipo = 'J' THEN
         IF p_cnpj IS NULL OR p_razao_social IS NULL THEN
             RAISE EXCEPTION 'Para cadastrar Pessoa Jurídica (J), CNPJ e Razão Social são obrigatórios.';
         END IF;
         
-        INSERT INTO "Pessoa_Juridica" ("id_pessoa", "razao_social", "cnpj", "tipo_pessoa")
-        VALUES (v_id_pessoa, p_razao_social, p_cnpj, 'J');
+        INSERT INTO "Pessoa_Juridica" ("id_pessoa", "razao_social", "cnpj")
+        VALUES (v_id_pessoa, p_razao_social, p_cnpj);
     ELSE
-        RAISE EXCEPTION 'Tipo de pessoa inválido. Utilize ''F'' para Física ou ''J'' para Jurídica.';
+        RAISE EXCEPTION 'Tipo de pessoa inválido. Utilize ''F'' ou ''J''.';
     END IF;
 
 
     INSERT INTO "Pessoa_Papel" ("id_pessoa", "id_papel")
     VALUES (v_id_pessoa, v_id_papel_cliente);
 
-    RAISE NOTICE 'Cliente % cadastrado com sucesso! ID gerado: %', p_nome, v_id_pessoa;
+    RAISE NOTICE 'Cliente % cadastrado com sucesso! ID: %', p_nome, v_id_pessoa;
 END;
 $$;
 
@@ -188,5 +192,62 @@ BEGIN
         pd_titulo_comercial
     );
 
+END;
+$$;
+
+
+CREATE OR REPLACE PROCEDURE pd_atualizar_cliente(
+    p_id_pessoa INT,
+    p_nome VARCHAR(255),
+    p_telefone VARCHAR(15),
+    p_email VARCHAR(320),
+    p_tipo CHAR(1),
+    p_cpf CHAR(11) DEFAULT NULL,
+    p_data_nascimento DATE DEFAULT NULL,
+    p_razao_social VARCHAR(255) DEFAULT NULL,
+    p_cnpj CHAR(14) DEFAULT NULL
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_tipo_atual CHAR(1);
+BEGIN
+    SELECT "tipo" INTO v_tipo_atual FROM "Pessoa" WHERE "id" = p_id_pessoa;
+    
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Cliente com ID % não encontrado.', p_id_pessoa;
+    END IF;
+
+    UPDATE "Pessoa"
+    SET "nome" = p_nome,
+        "telefone" = p_telefone,
+        "email" = p_email
+    WHERE "id" = p_id_pessoa;
+
+    IF p_tipo = 'F' THEN
+
+        UPDATE "Pessoa_Fisica"
+        SET "cpf" = p_cpf,
+            "data_nascimento" = p_data_nascimento
+        WHERE "id_pessoa" = p_id_pessoa;
+        
+        IF NOT FOUND THEN
+            INSERT INTO "Pessoa_Fisica" ("id_pessoa", "cpf", "data_nascimento")
+            VALUES (p_id_pessoa, p_cpf, p_data_nascimento);
+        END IF;
+
+    ELSIF p_tipo = 'J' THEN
+        UPDATE "Pessoa_Juridica"
+        SET "razao_social" = p_razao_social,
+            "cnpj" = p_cnpj
+        WHERE "id_pessoa" = p_id_pessoa;
+
+        IF NOT FOUND THEN
+            INSERT INTO "Pessoa_Juridica" ("id_pessoa", "razao_social", "cnpj")
+            VALUES (p_id_pessoa, p_razao_social, p_cnpj);
+        END IF;
+    END IF;
+
+    RAISE NOTICE 'Cliente ID % atualizado com sucesso!', p_id_pessoa;
 END;
 $$;

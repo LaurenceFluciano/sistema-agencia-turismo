@@ -1,12 +1,4 @@
-DROP TYPE IF EXISTS tipo_status_pessoa CASCADE; 
-DROP TYPE IF EXISTS tipo_status_pacote CASCADE; 
-DROP TYPE IF EXISTS tipo_status_reserva CASCADE; 
-DROP TYPE IF EXISTS tipo_status_pagamento CASCADE; 
-DROP TYPE IF EXISTS tipo_status_fornecedor_servico CASCADE; 
-DROP TYPE IF EXISTS tipo_status_itinerario CASCADE; 
-DROP TYPE IF EXISTS tipo_status_servico CASCADE; 
-DROP TYPE IF EXISTS tipo_status_reserva_item CASCADE; 
-
+-- Início: 000_tipos.up.sql
 CREATE TYPE tipo_status_pessoa AS ENUM (
   'ATIVO', 
   'INATIVO'
@@ -49,27 +41,7 @@ CREATE TYPE tipo_status_servico AS ENUM (
   'INTERDITADO',
   'EM_ANALISE'
 );
-
-DROP TABLE IF EXISTS "Passageiro" CASCADE;
-DROP TABLE IF EXISTS "Itinerario" CASCADE;
-DROP TABLE IF EXISTS "Pagamento" CASCADE;
-DROP TABLE IF EXISTS "Reserva_Item" CASCADE;
-DROP TABLE IF EXISTS "Reserva" CASCADE;
-DROP TABLE IF EXISTS "Pacote_Item" CASCADE;
-DROP TABLE IF EXISTS "Pacote" CASCADE;
-DROP TABLE IF EXISTS "Fornecedor_Servico" CASCADE;
-DROP TABLE IF EXISTS "Servico" CASCADE;
-DROP TABLE IF EXISTS "Tipo_Servico" CASCADE;
-DROP TABLE IF EXISTS "Municipio" CASCADE;
-DROP TABLE IF EXISTS "Estado" CASCADE;
-DROP TABLE IF EXISTS "Pais" CASCADE;
-DROP TABLE IF EXISTS "Pessoa_Juridica" CASCADE;
-DROP TABLE IF EXISTS "Pessoa_Fisica" CASCADE;
-DROP TABLE IF EXISTS "Pessoa_Papel" CASCADE;
-DROP TABLE IF EXISTS "Tipo_Pessoa_Papel" CASCADE;
-DROP TABLE IF EXISTS "Papel" CASCADE;
-DROP TABLE IF EXISTS "Pessoa" CASCADE;
-
+-- Início: 001_ddl.up.sql
 /*
 * Cadastro e Gestão de Contatos/Atores
 */
@@ -81,6 +53,7 @@ CREATE TABLE "Pessoa" (
   "email" VARCHAR(320),
   "data_cadastro" TIMESTAMP DEFAULT NOW(),
   "status" tipo_status_pessoa DEFAULT 'ATIVO',
+  "tipo" CHAR(1) CHECK ("tipo" IN ('F', 'J')),
 
   CONSTRAINT "pk_pessoa" PRIMARY KEY ("id")
 );
@@ -96,7 +69,9 @@ CREATE TABLE "Pessoa_Papel" (
   "id_pessoa" INT,
   "id_papel" INT,
 
-  CONSTRAINT "pk_pessoa_papel" PRIMARY KEY ("id_pessoa", "id_papel")
+  CONSTRAINT "pk_pessoa_papel" PRIMARY KEY ("id_pessoa", "id_papel"),
+  CONSTRAINT "fk_pessoa_papel_pessoa" FOREIGN KEY ("id_pessoa") REFERENCES "Pessoa"("id") ON DELETE CASCADE,
+  CONSTRAINT "fk_pessoa_papel_papel" FOREIGN KEY ("id_papel") REFERENCES "Papel"("id") ON DELETE CASCADE
 );
 
 CREATE TABLE "Pessoa_Fisica" (
@@ -104,7 +79,8 @@ CREATE TABLE "Pessoa_Fisica" (
   "cpf" CHAR(11),
   "data_nascimento" DATE,
 
-  CONSTRAINT "pk_pessoa_fisica" PRIMARY KEY ("id_pessoa")
+  CONSTRAINT "pk_pessoa_fisica" PRIMARY KEY ("id_pessoa"),
+  CONSTRAINT "fk_pessoa_fisica_pessoa" FOREIGN KEY ("id_pessoa") REFERENCES "Pessoa"("id") ON DELETE CASCADE
 );
 
 CREATE TABLE "Pessoa_Juridica" (
@@ -112,7 +88,8 @@ CREATE TABLE "Pessoa_Juridica" (
   "razao_social" VARCHAR(255),
   "cnpj" CHAR(14),
 
-  CONSTRAINT "pk_pessoa_juridica" PRIMARY KEY ("id_pessoa")
+  CONSTRAINT "pk_pessoa_juridica" PRIMARY KEY ("id_pessoa"),
+  CONSTRAINT "fk_pessoa_juridica_pessoa" FOREIGN KEY ("id_pessoa") REFERENCES "Pessoa"("id") ON DELETE CASCADE
 );
 
 CREATE TABLE "Tipo_Pessoa_Papel" (
@@ -259,13 +236,6 @@ CREATE INDEX ON "Itinerario" ("id_reserva", "id_fornecedor_servico");
 * CONSTRAINTS DE INTEGRIDADE REFERENCIAL 
 */
 
-ALTER TABLE "Pessoa_Fisica" ADD FOREIGN KEY ("id_pessoa") REFERENCES "Pessoa" ("id");
-ALTER TABLE "Pessoa_Juridica" ADD FOREIGN KEY ("id_pessoa") REFERENCES "Pessoa" ("id");
-
-
-ALTER TABLE "Pessoa_Papel" ADD FOREIGN KEY ("id_papel") REFERENCES "Papel" ("id");
-ALTER TABLE "Pessoa_Papel" ADD FOREIGN KEY ("id_pessoa") REFERENCES "Pessoa" ("id");
-
 ALTER TABLE "Servico" ADD FOREIGN KEY ("id_municipio") REFERENCES "Municipio" ("id");
 ALTER TABLE "Servico" ADD FOREIGN KEY ("id_tipo") REFERENCES "Tipo_Servico" ("id");
 
@@ -291,19 +261,6 @@ ALTER TABLE "Itinerario" ADD FOREIGN KEY ("id_municipio") REFERENCES "Municipio"
 
 ALTER TABLE "Itinerario" ADD FOREIGN KEY ("id_reserva", "id_fornecedor_servico") REFERENCES "Reserva_Item" ("id_reserva", "id_fornecedor_servico");
 
-ALTER TABLE "Pessoa" ADD COLUMN "tipo_pessoa" CHAR(1) NOT NULL CHECK ("tipo_pessoa" IN ('F', 'J'));
-ALTER TABLE "Pessoa" ADD CONSTRAINT "id_tipo_pessoa_unique" UNIQUE ("id", "tipo_pessoa");
-
-
-ALTER TABLE "Pessoa_Fisica" ADD COLUMN "tipo_pessoa" CHAR(1) DEFAULT 'F' NOT NULL CHECK ("tipo_pessoa" = 'F');
-ALTER TABLE "Pessoa_Fisica" ADD CONSTRAINT "fk_pessoa_fisica" 
-  FOREIGN KEY ("id_pessoa", "tipo_pessoa") REFERENCES "Pessoa" ("id", "tipo_pessoa");
-
-
-ALTER TABLE "Pessoa_Juridica" ADD COLUMN "tipo_pessoa" CHAR(1) DEFAULT 'J' NOT NULL CHECK ("tipo_pessoa" = 'J');
-ALTER TABLE "Pessoa_Juridica" ADD CONSTRAINT "fk_pessoa_juridica" 
-  FOREIGN KEY ("id_pessoa", "tipo_pessoa") REFERENCES "Pessoa" ("id", "tipo_pessoa");
-
 ALTER TABLE "Passageiro" ADD CONSTRAINT "fk_passageiro_pessoa_fisica"
   FOREIGN KEY ("id_pessoa") REFERENCES "Pessoa_Fisica" ("id_pessoa");
 
@@ -314,23 +271,10 @@ ALTER TABLE "Reserva_Item" ADD COLUMN "gerado_pelo_pacote" BOOLEAN DEFAULT FALSE
 ALTER TABLE "Reserva_Item"
 ADD COLUMN "percentual_desconto_venda" NUMERIC(5,2) DEFAULT 0;
 
-
+-- Início: 002_funcao.up.sql
 /**
-* FUNCOES
+* FUNCOES OPERACIONAIS
 */
-
-DROP FUNCTION IF EXISTS fn_marcar_reserva_como_concluido_ou_em_atraso() CASCADE;
-DROP FUNCTION IF EXISTS fn_atualizar_total_reserva() CASCADE;
-DROP FUNCTION IF EXISTS fn_remover_itens_pacote_da_reserva() CASCADE;
-DROP FUNCTION IF EXISTS fn_copiar_itens_pacote_para_reserva() CASCADE;
-DROP FUNCTION IF EXISTS fn_validar_papel_pessoa() CASCADE;
-DROP FUNCTION IF EXISTS fn_listar_servicos_por_municipio(INT) CASCADE;
-DROP FUNCTION IF EXISTS fn_calcular_lucro_periodo(DATE, DATE) CASCADE;
-DROP FUNCTION IF EXISTS fn_calcular_lucro_reserva(INT) CASCADE;
-
-
-DROP FUNCTION IF EXISTS fn_atualiza_data_atualizacao() CASCADE;
-DROP FUNCTION IF EXISTS fn_validar_periodo(anyelement, anyelement) CASCADE;
 
 -- Função responsável por validar periodos de datas
 CREATE OR REPLACE FUNCTION fn_validar_periodo(data_hora_inicio ANYELEMENT, data_hora_fim ANYELEMENT)
@@ -352,6 +296,42 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Função que impede cadastros de pessoa inconsistentes
+CREATE OR REPLACE FUNCTION check_pessoa_fisica_tipo()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF (SELECT tipo FROM "Pessoa" WHERE id = NEW.id_pessoa) != 'F' THEN
+        RAISE EXCEPTION 'Erro: Esta pessoa não é do tipo Física (F).';
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION check_pessoa_juridica_tipo()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF (SELECT tipo FROM "Pessoa" WHERE id = NEW.id_pessoa) != 'J' THEN
+        RAISE EXCEPTION 'Erro: Esta pessoa não é do tipo Jurídica (J).';
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+/**
+* FUNCOES DE NEGOCIO
+*/
+
+
+/*******************************\
+* GESTAO DE CADASTRO DE ATORES *
+\*******************************/
+
+
+
+/* Regra de Negócio - Papel da Pessoa
+* 1 - Uma pessoa física pode ser um cliente ou fornecedor.
+* 2 - Uma pessoa jurídica pode ser um cliente, fornecedor ou empresa.
+*/
 
 CREATE OR REPLACE FUNCTION 
 fn_validar_papel_pessoa()
@@ -360,7 +340,7 @@ DECLARE
     d_tipo_pessoa CHAR(1);
 BEGIN
 
-    SELECT "Pessoa"."tipo_pessoa" 
+    SELECT "Pessoa"."tipo" 
     INTO d_tipo_pessoa 
     FROM "Pessoa" WHERE 
     NEW.id_pessoa = "Pessoa"."id";
@@ -549,10 +529,7 @@ BEGIN
     RETURN v_lucro_reserva;
 END;
 $$ LANGUAGE plpgsql;
-
-ALTER TABLE "Itinerario" DROP CONSTRAINT IF EXISTS "chk_data_hora" ;
-ALTER TABLE "Reserva" DROP CONSTRAINT IF EXISTS "chk_data" ;
-
+-- Início: 003_constraint.up.sql
 ALTER TABLE "Itinerario" 
     ADD CONSTRAINT "chk_data_hora" 
         CHECK (fn_validar_periodo("data_hora_inicio_utc", "data_hora_fim_utc"));
@@ -560,27 +537,7 @@ ALTER TABLE "Itinerario"
 ALTER TABLE "Reserva"
     ADD CONSTRAINT "chk_data" 
         CHECK (fn_validar_periodo("data_inicio_viagem_utc","data_fim_viagem_utc"));
-
-
-
--- Gatilhos de atualização de timestamp
-DROP TRIGGER IF EXISTS tg_atualiza_data_atualizacao_servico ON "Servico";
-DROP TRIGGER IF EXISTS tg_atualiza_data_atualizacao_fornecedor_servico ON "Fornecedor_Servico";
-
--- Gatilho de validação de papéis
-DROP TRIGGER IF EXISTS tg_verificar_papel_tipo_pessoa ON "Pessoa_Papel";
-
--- Gatilhos de gerenciamento de pacotes na reserva
-DROP TRIGGER IF EXISTS tg_copiar_itens_pacote_reserva ON "Reserva";
-DROP TRIGGER IF EXISTS tg_remover_itens_pacote_reserva ON "Reserva";
-
--- Gatilho de cálculo financeiro do total da reserva
-DROP TRIGGER IF EXISTS tg_atualizar_total_reserva ON "Reserva_Item";
-
--- Gatilho de verificação de inadimplência/quitação
-DROP TRIGGER IF EXISTS tg_marcar_reserva_como_concluido_ou_em_atraso ON "Pagamento";
-
-
+-- Início: 004_trigger.up.sql
 CREATE OR REPLACE TRIGGER tg_atualiza_data_atualizacao_servico
 BEFORE UPDATE ON "Servico"
 FOR EACH ROW
@@ -624,247 +581,14 @@ AFTER UPDATE OR INSERT ON "Pagamento"
 FOR EACH ROW
 EXECUTE FUNCTION fn_marcar_reserva_como_concluido_ou_em_atraso();
 
+CREATE TRIGGER trg_check_pessoa_fisica
+BEFORE INSERT OR UPDATE ON "Pessoa_Fisica"
+FOR EACH ROW EXECUTE FUNCTION check_pessoa_fisica_tipo();
 
-/* PROCEDURES */
-
-DROP PROCEDURE IF EXISTS pd_definir_preco_da_reserva(
-    INT,
-    INT,
-    DECIMAL(13,4),
-    NUMERIC(5,2)
-);
-
-DROP PROCEDURE IF EXISTS pd_adicionar_passageiro_na_viagem(
-    VARCHAR(255),
-    INT
-);
-
-DROP PROCEDURE IF EXISTS pd_criar_oferta_comercial(
-    INT,
-    VARCHAR(255),
-    INT,
-    INT,
-    VARCHAR(256)
-);
-
-DROP PROCEDURE IF EXISTS pd_cadastrar_cliente(
-    VARCHAR(255),
-    VARCHAR(15),
-    VARCHAR(320),
-    CHAR(1),
-    CHAR(11),
-    DATE,
-    VARCHAR(255),
-    CHAR(14)
-);
-
-DROP PROCEDURE IF EXISTS pd_rotina_cancelar_pagamentos_vencidos();
-
-
-CREATE OR REPLACE PROCEDURE pd_definir_preco_da_reserva(
-    pd_id_reserva INT,
-    pd_id_fornecedor_servico INT,
-    pd_preco_fornecedor DECIMAL(13,4),
-    pd_percentual_aumento NUMERIC(5,2)
-)
-LANGUAGE plpgsql
-AS $$
-BEGIN
-
-    UPDATE "Reserva_Item"
-    SET
-        "custo_fornecedor" = pd_preco_fornecedor,
-        "preco_venda" =
-            pd_preco_fornecedor *
-            (1 + pd_percentual_aumento / 100.0)
-    WHERE
-        "id_reserva" = pd_id_reserva
-        AND "id_fornecedor_servico" = pd_id_fornecedor_servico;
-
-    IF NOT FOUND THEN
-        RAISE WARNING
-            'Reserva % e serviço % não encontrados.',
-            pd_id_reserva,
-            pd_id_fornecedor_servico;
-    END IF;
-
-END;
-$$;
-
-
-CREATE OR REPLACE PROCEDURE
-    pd_adicionar_passageiro_na_viagem(
-        pd_nome VARCHAR(255),
-        pd_id_reserva INT
-    )
-LANGUAGE plpgsql AS $$
-DECLARE
-    v_id_pessoa INT;
-BEGIN
-    INSERT INTO "Pessoa" ("nome","tipo_pessoa") 
-    VALUES (pd_nome, 'F')
-    RETURNING "id" INTO v_id_pessoa;
-
-    INSERT INTO "Pessoa_Fisica" ("id_pessoa","tipo_pessoa") 
-    VALUES (v_id_pessoa, 'F');
-
-    INSERT INTO "Passageiro" (
-        "id_reserva",
-        "id_pessoa"
-    ) VALUES (
-        pd_id_reserva,
-        v_id_pessoa
-    );
-END;
-$$;
-
-
-CREATE OR REPLACE PROCEDURE pd_rotina_cancelar_pagamentos_vencidos()
-LANGUAGE plpgsql
-AS $$
-BEGIN
-    UPDATE "Reserva"
-    SET "status" = 'CANCELADA'::tipo_status_reserva
-    WHERE "id" IN (
-        SELECT "id_reserva" 
-        FROM "Pagamento" 
-        WHERE "status" = 'PENDENTE'::tipo_status_pagamento 
-          AND "data_pagamento_utc" < NOW()
-    );
-    
-    UPDATE "Pagamento"
-    SET "status" = 'VENCIDO'::tipo_status_pagamento
-    WHERE "status" = 'PENDENTE'::tipo_status_pagamento 
-      AND "data_pagamento_utc" < NOW();
-
-
-    RAISE NOTICE 'Rotina concluída: Pagamentos atrasados e suas respectivas reservas foram devidamente cancelados.';
-END;
-$$;
-
-
-CREATE OR REPLACE PROCEDURE pd_cadastrar_cliente(
-    p_nome VARCHAR(255),
-    p_telefone VARCHAR(15),
-    p_email VARCHAR(320),
-    p_tipo_pessoa CHAR(1),
-    p_cpf CHAR(11) DEFAULT NULL,
-    p_data_nascimento DATE DEFAULT NULL,
-    p_razao_social VARCHAR(255) DEFAULT NULL,
-    p_cnpj CHAR(14) DEFAULT NULL
-)
-LANGUAGE plpgsql
-AS $$
-DECLARE
-    v_id_pessoa INT;
-    v_id_papel_cliente INT;
-BEGIN
-    SELECT "id" INTO v_id_papel_cliente 
-    FROM "Papel" 
-    WHERE "nome_papel" = 'Cliente';
-    
-    IF v_id_papel_cliente IS NULL THEN
-        RAISE EXCEPTION 'Erro crítico: O papel ''Cliente'' não foi localizado na tabela Papel.';
-    END IF;
-
-
-    INSERT INTO "Pessoa" ("nome", "telefone", "email", "tipo_pessoa")
-    VALUES (p_nome, p_telefone, p_email, p_tipo_pessoa)
-    RETURNING "id" INTO v_id_pessoa;
-
-    IF p_tipo_pessoa = 'F' THEN
-
-        IF p_cpf IS NULL THEN
-            RAISE EXCEPTION 'Para cadastrar Pessoa Física (F), o parâmetro de CPF é obrigatório.';
-        END IF;
-        
-        INSERT INTO "Pessoa_Fisica" ("id_pessoa", "cpf", "data_nascimento", "tipo_pessoa")
-        VALUES (v_id_pessoa, p_cpf, p_data_nascimento, 'F');
-        
-    ELSIF p_tipo_pessoa = 'J' THEN
-        
-        IF p_cnpj IS NULL OR p_razao_social IS NULL THEN
-            RAISE EXCEPTION 'Para cadastrar Pessoa Jurídica (J), CNPJ e Razão Social são obrigatórios.';
-        END IF;
-        
-        INSERT INTO "Pessoa_Juridica" ("id_pessoa", "razao_social", "cnpj", "tipo_pessoa")
-        VALUES (v_id_pessoa, p_razao_social, p_cnpj, 'J');
-    ELSE
-        RAISE EXCEPTION 'Tipo de pessoa inválido. Utilize ''F'' para Física ou ''J'' para Jurídica.';
-    END IF;
-
-
-    INSERT INTO "Pessoa_Papel" ("id_pessoa", "id_papel")
-    VALUES (v_id_pessoa, v_id_papel_cliente);
-
-    RAISE NOTICE 'Cliente % cadastrado com sucesso! ID gerado: %', p_nome, v_id_pessoa;
-END;
-$$;
-
-
-CREATE OR REPLACE PROCEDURE
-    pd_criar_oferta_comercial(
-        pd_id_fornecedor INT,
-        pd_nome_servico VARCHAR(255),
-        pd_id_tipo_servico INT,
-        pd_id_municipio INT,
-        pd_titulo_comercial VARCHAR(256)
-    )
-LANGUAGE plpgsql
-AS $$
-DECLARE
-    v_id_servico INT;
-BEGIN
-
-    SELECT s."id"
-    INTO v_id_servico
-    FROM "Servico" s
-    WHERE s."nome_oficial" = pd_nome_servico
-      AND s."id_tipo" = pd_id_tipo_servico
-      AND s."id_municipio" = pd_id_municipio;
-
-    IF NOT FOUND THEN
-
-        INSERT INTO "Servico" (
-            "nome_oficial",
-            "id_tipo",
-            "id_municipio"
-        )
-        VALUES (
-            pd_nome_servico,
-            pd_id_tipo_servico,
-            pd_id_municipio
-        )
-        RETURNING "id"
-        INTO v_id_servico;
-
-    END IF;
-
-    INSERT INTO "Fornecedor_Servico" (
-        "id_pessoa",
-        "id_servico",
-        "titulo_comercial"
-    )
-    VALUES (
-        pd_id_fornecedor,
-        v_id_servico,
-        pd_titulo_comercial
-    );
-
-END;
-$$;
-
-
-/**
-* VIEWS
-*/
-
-DROP VIEW IF EXISTS vw_fornecedor_servico_completo CASCADE;
-
-DROP VIEW IF EXISTS vw_relatorio_itinerario_completo CASCADE;
-
-DROP VIEW IF EXISTS vw_pacotes_mais_reservados CASCADE;
-
+CREATE TRIGGER trg_check_pessoa_juridica
+BEFORE INSERT OR UPDATE ON "Pessoa_Juridica"
+FOR EACH ROW EXECUTE FUNCTION check_pessoa_juridica_tipo();
+-- Início: 005_view.up.sql
 CREATE OR REPLACE VIEW vw_fornecedor_servico_completo AS
 SELECT 
     fs."id" AS id_fornecedor_servico,
@@ -924,14 +648,263 @@ JOIN "Reserva" r ON r."id_pacote" = pa."id"
 WHERE r."status" NOT IN ('CANCELADA', 'RASCUNHO') 
 GROUP BY pa."id", pa."nome"
 ORDER BY total_reservas DESC;
+-- Início: 006_procedure.up.sql
+CREATE OR REPLACE PROCEDURE pd_definir_preco_da_reserva(
+    pd_id_reserva INT,
+    pd_id_fornecedor_servico INT,
+    pd_preco_fornecedor DECIMAL(13,4),
+    pd_percentual_aumento NUMERIC(5,2)
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
 
--- 007
+    UPDATE "Reserva_Item"
+    SET
+        "custo_fornecedor" = pd_preco_fornecedor,
+        "preco_venda" =
+            pd_preco_fornecedor *
+            (1 + pd_percentual_aumento / 100.0)
+    WHERE
+        "id_reserva" = pd_id_reserva
+        AND "id_fornecedor_servico" = pd_id_fornecedor_servico;
 
-ALTER TABLE "Fornecedor_Servico" DROP COLUMN IF EXISTS "provedor_nome"; -- ex: 'BOOKING_API', 'SABRE_V_API', 'PROPRIO'
-ALTER TABLE "Fornecedor_Servico" DROP COLUMN IF EXISTS "codigo_id_externo"; -- ex: 'hotel_xyz_7761'
-ALTER TABLE "Reserva" DROP COLUMN IF EXISTS "orcamento";
+    IF NOT FOUND THEN
+        RAISE WARNING
+            'Reserva % e serviço % não encontrados.',
+            pd_id_reserva,
+            pd_id_fornecedor_servico;
+    END IF;
+
+END;
+$$;
 
 
+CREATE OR REPLACE PROCEDURE
+    pd_adicionar_passageiro_na_viagem(
+        pd_nome VARCHAR(255),
+        pd_id_reserva INT
+    )
+LANGUAGE plpgsql AS $$
+DECLARE
+    v_id_pessoa INT;
+BEGIN
+    INSERT INTO "Pessoa" ("nome","tipo") 
+    VALUES (pd_nome, 'F')
+    RETURNING "id" INTO v_id_pessoa;
+
+    INSERT INTO "Pessoa_Fisica" ("id_pessoa") 
+    VALUES (v_id_pessoa);
+
+    INSERT INTO "Passageiro" (
+        "id_reserva",
+        "id_pessoa"
+    ) VALUES (
+        pd_id_reserva,
+        v_id_pessoa
+    );
+END;
+$$;
+
+
+CREATE OR REPLACE PROCEDURE pd_rotina_cancelar_pagamentos_vencidos()
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    UPDATE "Reserva"
+    SET "status" = 'CANCELADA'::tipo_status_reserva
+    WHERE "id" IN (
+        SELECT "id_reserva" 
+        FROM "Pagamento" 
+        WHERE "status" = 'PENDENTE'::tipo_status_pagamento 
+          AND "data_pagamento_utc" < NOW()
+    );
+    
+    UPDATE "Pagamento"
+    SET "status" = 'VENCIDO'::tipo_status_pagamento
+    WHERE "status" = 'PENDENTE'::tipo_status_pagamento 
+      AND "data_pagamento_utc" < NOW();
+
+
+    RAISE NOTICE 'Rotina concluída: Pagamentos atrasados e suas respectivas reservas foram devidamente cancelados.';
+END;
+$$;
+
+CREATE OR REPLACE PROCEDURE pd_cadastrar_cliente(
+    p_nome VARCHAR(255),
+    p_telefone VARCHAR(15),
+    p_email VARCHAR(320),
+    p_tipo CHAR(1),
+    p_cpf CHAR(11) DEFAULT NULL,
+    p_data_nascimento DATE DEFAULT NULL,
+    p_razao_social VARCHAR(255) DEFAULT NULL,
+    p_cnpj CHAR(14) DEFAULT NULL
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_id_pessoa INT;
+    v_id_papel_cliente INT;
+BEGIN
+    SELECT "id" INTO v_id_papel_cliente 
+    FROM "Papel" 
+    WHERE "nome_papel" = 'Cliente';
+    
+    IF v_id_papel_cliente IS NULL THEN
+        RAISE EXCEPTION 'Erro crítico: O papel ''Cliente'' não foi localizado na tabela Papel.';
+    END IF;
+
+
+    INSERT INTO "Pessoa" ("nome", "telefone", "email", "tipo")
+    VALUES (p_nome, p_telefone, p_email, p_tipo)
+    RETURNING "id" INTO v_id_pessoa;
+
+
+    IF p_tipo = 'F' THEN
+        IF p_cpf IS NOT NULL THEN
+            IF EXISTS (SELECT 1 FROM "Pessoa_Fisica" WHERE "cpf" = p_cpf) THEN
+                RAISE EXCEPTION 'Já existe uma Pessoa Física cadastrada com este CPF.';
+            END IF;
+            
+            IF LENGTH(TRIM(p_cpf)) != 11 THEN
+                RAISE EXCEPTION 'O CPF deve conter 11 dígitos.';
+            END IF;
+        END IF;
+        
+        INSERT INTO "Pessoa_Fisica" ("id_pessoa", "cpf", "data_nascimento")
+        VALUES (v_id_pessoa, p_cpf, p_data_nascimento);
+        
+    ELSIF p_tipo = 'J' THEN
+        IF p_cnpj IS NULL OR p_razao_social IS NULL THEN
+            RAISE EXCEPTION 'Para cadastrar Pessoa Jurídica (J), CNPJ e Razão Social são obrigatórios.';
+        END IF;
+        
+        INSERT INTO "Pessoa_Juridica" ("id_pessoa", "razao_social", "cnpj")
+        VALUES (v_id_pessoa, p_razao_social, p_cnpj);
+    ELSE
+        RAISE EXCEPTION 'Tipo de pessoa inválido. Utilize ''F'' ou ''J''.';
+    END IF;
+
+
+    INSERT INTO "Pessoa_Papel" ("id_pessoa", "id_papel")
+    VALUES (v_id_pessoa, v_id_papel_cliente);
+
+    RAISE NOTICE 'Cliente % cadastrado com sucesso! ID: %', p_nome, v_id_pessoa;
+END;
+$$;
+
+
+CREATE OR REPLACE PROCEDURE
+    pd_criar_oferta_comercial(
+        pd_id_fornecedor INT,
+        pd_nome_servico VARCHAR(255),
+        pd_id_tipo_servico INT,
+        pd_id_municipio INT,
+        pd_titulo_comercial VARCHAR(256)
+    )
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_id_servico INT;
+BEGIN
+
+    SELECT s."id"
+    INTO v_id_servico
+    FROM "Servico" s
+    WHERE s."nome_oficial" = pd_nome_servico
+      AND s."id_tipo" = pd_id_tipo_servico
+      AND s."id_municipio" = pd_id_municipio;
+
+    IF NOT FOUND THEN
+
+        INSERT INTO "Servico" (
+            "nome_oficial",
+            "id_tipo",
+            "id_municipio"
+        )
+        VALUES (
+            pd_nome_servico,
+            pd_id_tipo_servico,
+            pd_id_municipio
+        )
+        RETURNING "id"
+        INTO v_id_servico;
+
+    END IF;
+
+    INSERT INTO "Fornecedor_Servico" (
+        "id_pessoa",
+        "id_servico",
+        "titulo_comercial"
+    )
+    VALUES (
+        pd_id_fornecedor,
+        v_id_servico,
+        pd_titulo_comercial
+    );
+
+END;
+$$;
+
+
+CREATE OR REPLACE PROCEDURE pd_atualizar_cliente(
+    p_id_pessoa INT,
+    p_nome VARCHAR(255),
+    p_telefone VARCHAR(15),
+    p_email VARCHAR(320),
+    p_tipo CHAR(1),
+    p_cpf CHAR(11) DEFAULT NULL,
+    p_data_nascimento DATE DEFAULT NULL,
+    p_razao_social VARCHAR(255) DEFAULT NULL,
+    p_cnpj CHAR(14) DEFAULT NULL
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_tipo_atual CHAR(1);
+BEGIN
+    SELECT "tipo" INTO v_tipo_atual FROM "Pessoa" WHERE "id" = p_id_pessoa;
+    
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'Cliente com ID % não encontrado.', p_id_pessoa;
+    END IF;
+
+    UPDATE "Pessoa"
+    SET "nome" = p_nome,
+        "telefone" = p_telefone,
+        "email" = p_email
+    WHERE "id" = p_id_pessoa;
+
+    IF p_tipo = 'F' THEN
+
+        UPDATE "Pessoa_Fisica"
+        SET "cpf" = p_cpf,
+            "data_nascimento" = p_data_nascimento
+        WHERE "id_pessoa" = p_id_pessoa;
+        
+        IF NOT FOUND THEN
+            INSERT INTO "Pessoa_Fisica" ("id_pessoa", "cpf", "data_nascimento")
+            VALUES (p_id_pessoa, p_cpf, p_data_nascimento);
+        END IF;
+
+    ELSIF p_tipo = 'J' THEN
+        UPDATE "Pessoa_Juridica"
+        SET "razao_social" = p_razao_social,
+            "cnpj" = p_cnpj
+        WHERE "id_pessoa" = p_id_pessoa;
+
+        IF NOT FOUND THEN
+            INSERT INTO "Pessoa_Juridica" ("id_pessoa", "razao_social", "cnpj")
+            VALUES (p_id_pessoa, p_razao_social, p_cnpj);
+        END IF;
+    END IF;
+
+    RAISE NOTICE 'Cliente ID % atualizado com sucesso!', p_id_pessoa;
+END;
+$$;
+-- Início: 007_conexao_externa.up.sql
 ALTER TABLE "Fornecedor_Servico" ADD COLUMN "provedor_nome" VARCHAR(50); -- ex: 'BOOKING_API', 'SABRE_V_API', 'PROPRIO'
 ALTER TABLE "Fornecedor_Servico" ADD COLUMN "codigo_id_externo" VARCHAR(255); -- ex: 'hotel_xyz_7761'
+
+
 ALTER TABLE "Reserva" ADD COLUMN "orcamento" DECIMAL(13,4);

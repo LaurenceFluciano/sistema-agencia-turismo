@@ -14,3 +14,6 @@ DROP TRIGGER IF EXISTS tg_atualizar_total_reserva ON "Reserva_Item";
 
 -- Gatilho de verificação de inadimplência/quitação
 DROP TRIGGER IF EXISTS tg_marcar_reserva_como_concluido_ou_em_atraso ON "Pagamento";
+
+DROP TRIGGER IF EXISTS  trg_check_pessoa_fisica ON "Pessoa_Fisica";
+DROP TRIGGER IF EXISTS  trg_check_pessoa_juridica ON "Pessoa_Juridica";

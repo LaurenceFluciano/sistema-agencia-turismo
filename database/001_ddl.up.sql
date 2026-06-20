@@ -9,6 +9,7 @@ CREATE TABLE "Pessoa" (
   "email" VARCHAR(320),
   "data_cadastro" TIMESTAMP DEFAULT NOW(),
   "status" tipo_status_pessoa DEFAULT 'ATIVO',
+  "tipo" CHAR(1) CHECK ("tipo" IN ('F', 'J')),
 
   CONSTRAINT "pk_pessoa" PRIMARY KEY ("id")
 );
@@ -24,7 +25,9 @@ CREATE TABLE "Pessoa_Papel" (
   "id_pessoa" INT,
   "id_papel" INT,
 
-  CONSTRAINT "pk_pessoa_papel" PRIMARY KEY ("id_pessoa", "id_papel")
+  CONSTRAINT "pk_pessoa_papel" PRIMARY KEY ("id_pessoa", "id_papel"),
+  CONSTRAINT "fk_pessoa_papel_pessoa" FOREIGN KEY ("id_pessoa") REFERENCES "Pessoa"("id") ON DELETE CASCADE,
+  CONSTRAINT "fk_pessoa_papel_papel" FOREIGN KEY ("id_papel") REFERENCES "Papel"("id") ON DELETE CASCADE
 );
 
 CREATE TABLE "Pessoa_Fisica" (
@@ -32,7 +35,8 @@ CREATE TABLE "Pessoa_Fisica" (
   "cpf" CHAR(11),
   "data_nascimento" DATE,
 
-  CONSTRAINT "pk_pessoa_fisica" PRIMARY KEY ("id_pessoa")
+  CONSTRAINT "pk_pessoa_fisica" PRIMARY KEY ("id_pessoa"),
+  CONSTRAINT "fk_pessoa_fisica_pessoa" FOREIGN KEY ("id_pessoa") REFERENCES "Pessoa"("id") ON DELETE CASCADE
 );
 
 CREATE TABLE "Pessoa_Juridica" (
@@ -40,7 +44,8 @@ CREATE TABLE "Pessoa_Juridica" (
   "razao_social" VARCHAR(255),
   "cnpj" CHAR(14),
 
-  CONSTRAINT "pk_pessoa_juridica" PRIMARY KEY ("id_pessoa")
+  CONSTRAINT "pk_pessoa_juridica" PRIMARY KEY ("id_pessoa"),
+  CONSTRAINT "fk_pessoa_juridica_pessoa" FOREIGN KEY ("id_pessoa") REFERENCES "Pessoa"("id") ON DELETE CASCADE
 );
 
 CREATE TABLE "Tipo_Pessoa_Papel" (
@@ -187,13 +192,6 @@ CREATE INDEX ON "Itinerario" ("id_reserva", "id_fornecedor_servico");
 * CONSTRAINTS DE INTEGRIDADE REFERENCIAL 
 */
 
-ALTER TABLE "Pessoa_Fisica" ADD FOREIGN KEY ("id_pessoa") REFERENCES "Pessoa" ("id");
-ALTER TABLE "Pessoa_Juridica" ADD FOREIGN KEY ("id_pessoa") REFERENCES "Pessoa" ("id");
-
-
-ALTER TABLE "Pessoa_Papel" ADD FOREIGN KEY ("id_papel") REFERENCES "Papel" ("id");
-ALTER TABLE "Pessoa_Papel" ADD FOREIGN KEY ("id_pessoa") REFERENCES "Pessoa" ("id");
-
 ALTER TABLE "Servico" ADD FOREIGN KEY ("id_municipio") REFERENCES "Municipio" ("id");
 ALTER TABLE "Servico" ADD FOREIGN KEY ("id_tipo") REFERENCES "Tipo_Servico" ("id");
 
@@ -218,19 +216,6 @@ ALTER TABLE "Passageiro" ADD FOREIGN KEY ("id_reserva") REFERENCES "Reserva" ("i
 ALTER TABLE "Itinerario" ADD FOREIGN KEY ("id_municipio") REFERENCES "Municipio" ("id");
 
 ALTER TABLE "Itinerario" ADD FOREIGN KEY ("id_reserva", "id_fornecedor_servico") REFERENCES "Reserva_Item" ("id_reserva", "id_fornecedor_servico");
-
-ALTER TABLE "Pessoa" ADD COLUMN "tipo_pessoa" CHAR(1) NOT NULL CHECK ("tipo_pessoa" IN ('F', 'J'));
-ALTER TABLE "Pessoa" ADD CONSTRAINT "id_tipo_pessoa_unique" UNIQUE ("id", "tipo_pessoa");
-
-
-ALTER TABLE "Pessoa_Fisica" ADD COLUMN "tipo_pessoa" CHAR(1) DEFAULT 'F' NOT NULL CHECK ("tipo_pessoa" = 'F');
-ALTER TABLE "Pessoa_Fisica" ADD CONSTRAINT "fk_pessoa_fisica" 
-  FOREIGN KEY ("id_pessoa", "tipo_pessoa") REFERENCES "Pessoa" ("id", "tipo_pessoa");
-
-
-ALTER TABLE "Pessoa_Juridica" ADD COLUMN "tipo_pessoa" CHAR(1) DEFAULT 'J' NOT NULL CHECK ("tipo_pessoa" = 'J');
-ALTER TABLE "Pessoa_Juridica" ADD CONSTRAINT "fk_pessoa_juridica" 
-  FOREIGN KEY ("id_pessoa", "tipo_pessoa") REFERENCES "Pessoa" ("id", "tipo_pessoa");
 
 ALTER TABLE "Passageiro" ADD CONSTRAINT "fk_passageiro_pessoa_fisica"
   FOREIGN KEY ("id_pessoa") REFERENCES "Pessoa_Fisica" ("id_pessoa");

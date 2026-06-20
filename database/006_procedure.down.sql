@@ -23,10 +23,22 @@ DROP PROCEDURE IF EXISTS pd_cadastrar_cliente(
     VARCHAR(15),
     VARCHAR(320),
     CHAR(1),
-    CHAR(11) DEFAULT NULL,
-    DATE DEFAULT NULL,
-    VARCHAR(255) DEFAULT NULL,
-    CHAR(14) DEFAULT NULL
+    CHAR(11),
+    DATE,
+    VARCHAR(255),
+    CHAR(14)
 );
 
 DROP PROCEDURE IF EXISTS pd_rotina_cancelar_pagamentos_vencidos();
+
+DROP PROCEDURE IF EXISTS pd_atualizar_cliente(
+    INT,
+    VARCHAR(255),
+    VARCHAR(15),
+    VARCHAR(320),
+    CHAR(1),
+    CHAR(11),
+    DATE,
+    VARCHAR(255),
+    CHAR(14)
+)

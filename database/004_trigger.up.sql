@@ -40,3 +40,11 @@ CREATE OR REPLACE TRIGGER tg_marcar_reserva_como_concluido_ou_em_atraso
 AFTER UPDATE OR INSERT ON "Pagamento"
 FOR EACH ROW
 EXECUTE FUNCTION fn_marcar_reserva_como_concluido_ou_em_atraso();
+
+CREATE TRIGGER trg_check_pessoa_fisica
+BEFORE INSERT OR UPDATE ON "Pessoa_Fisica"
+FOR EACH ROW EXECUTE FUNCTION check_pessoa_fisica_tipo();
+
+CREATE TRIGGER trg_check_pessoa_juridica
+BEFORE INSERT OR UPDATE ON "Pessoa_Juridica"
+FOR EACH ROW EXECUTE FUNCTION check_pessoa_juridica_tipo();

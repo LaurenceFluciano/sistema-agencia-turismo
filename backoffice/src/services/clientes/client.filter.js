@@ -41,7 +41,7 @@ function buildPersonFilters(searchParams) {
     if (result.success && tipoPessoaValidos.includes(result.data)) {
       const tipoPessoaSanitizado = result.data === "FISICA" ? "F" : "J";
 
-      filters.push(sql`AND pe.tipo_pessoa = ${tipoPessoaSanitizado}`)
+      filters.push(sql`AND pe.tipo = ${tipoPessoaSanitizado}`)
     }
   }
 

@@ -22,6 +22,26 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Função que impede cadastros de pessoa inconsistentes
+CREATE OR REPLACE FUNCTION check_pessoa_fisica_tipo()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF (SELECT tipo FROM "Pessoa" WHERE id = NEW.id_pessoa) != 'F' THEN
+        RAISE EXCEPTION 'Erro: Esta pessoa não é do tipo Física (F).';
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION check_pessoa_juridica_tipo()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF (SELECT tipo FROM "Pessoa" WHERE id = NEW.id_pessoa) != 'J' THEN
+        RAISE EXCEPTION 'Erro: Esta pessoa não é do tipo Jurídica (J).';
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
 /**
 * FUNCOES DE NEGOCIO
@@ -46,7 +66,7 @@ DECLARE
     d_tipo_pessoa CHAR(1);
 BEGIN
 
-    SELECT "Pessoa"."tipo_pessoa" 
+    SELECT "Pessoa"."tipo" 
     INTO d_tipo_pessoa 
     FROM "Pessoa" WHERE 
     NEW.id_pessoa = "Pessoa"."id";

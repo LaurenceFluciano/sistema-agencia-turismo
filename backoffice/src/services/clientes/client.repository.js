@@ -13,7 +13,7 @@ async function listClients(filters) {
         pe.telefone, 
         pe.status, 
         pf.cpf, 
-        pj.cnpj 
+        pj.cnpj
         FROM "Pessoa" pe
         JOIN "Pessoa_Papel" pp ON pp."id_pessoa" = pe."id"
         LEFT JOIN "Pessoa_Fisica" pf ON pf."id_pessoa" = pe."id"
@@ -59,4 +59,52 @@ async function registerClient(clientData) {
     }
 }
 
-export { listClients, registerClient };
+async function updateClient(clientData, id) {
+    try {
+        const nome = clientData.nome || null;
+        const telefone = clientData.telefone || null;
+        const email = clientData.email || null;
+        const tipo_pessoa = clientData.pessoa || "F";
+
+        const cpf = clientData.cpf || null;
+        const data_nascimento = clientData.data_nascimento || null;
+        const razao_social = clientData.razao_social || null;
+        const cnpj = clientData.cnpj || null;
+
+        await sql`
+            CALL pd_atualizar_cliente(
+                ${id},
+                ${nome}, 
+                ${telefone}, 
+                ${email}, 
+                ${tipo_pessoa}, 
+                ${cpf}, 
+                ${data_nascimento}, 
+                ${razao_social}, 
+                ${cnpj}
+            )
+        `;
+
+        return { success: true, message: "Cliente atualizado com sucesso!" };
+
+    } catch (error) {
+        console.error("Erro ao executar procedure:", error.message);
+        return { success: false, error: error.message };
+    }
+}
+
+
+
+async function deleteClient(id) {
+    // Melhoria: [ ] Soft Delete
+    try {
+        await sql`DELETE FROM "Pessoa" WHERE id = ${id}`;
+
+        return { success: true, message: "Cliente removido com sucesso." }
+    } catch (error) {
+        console.error("Erro ao executar a query: ", error.message);
+        return { success: false, message: "Erro ao remover o cliente" }
+    }
+}
+
+export { listClients, registerClient, deleteClient, updateClient };
