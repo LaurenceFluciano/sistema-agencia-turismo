@@ -1,17 +1,21 @@
 'use client'
-import { updateClient } from "@/services/clientes/client.repository";
-import { Dialog, DialogContent, DialogTrigger } from "../ui/dialog";
-import ClientForm from "./ClientForm";
+import { registerPerson, updatePerson } from "@/services/pessoas/person.repository";
+import { Dialog, DialogContent } from "../ui/dialog";
+import PersonForm from "./PersonForm";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-export default function ClientDialog({ cliente = null, trigger }) {
-    const isEditing = !!cliente;
+export default function PersonDialog({ 
+    pessoa = null, 
+    open,
+    onOpenChange 
+}) {
+    const isEditing = !!pessoa;
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(null);
     const router = useRouter();
 
-    const [tipoPessoa, setTipoPessoa] = useState(cliente?.tipo || "F");
+    const [tipoPessoa, setTipoPessoa] = useState(pessoa?.tipo || "F");
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -19,8 +23,8 @@ export default function ClientDialog({ cliente = null, trigger }) {
         data.pessoa = tipoPessoa;
         
         const result = isEditing 
-            ? await updateClient(data, cliente.id) 
-            : await registerClient(data);
+            ? await updatePerson(data, pessoa.id) 
+            : await registerPerson(data);
 
         if(result.success) {
             setSuccess(result.message);
@@ -31,11 +35,10 @@ export default function ClientDialog({ cliente = null, trigger }) {
     }
 
     return (
-        <Dialog>
-            <DialogTrigger asChild>{trigger}</DialogTrigger>
+        <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="md:max-w-180 max-w-sm">
-               <ClientForm 
-                    initialData={cliente}
+               <PersonForm 
+                    initialData={pessoa}
                     isEditing={isEditing}
                     onSubmit={handleSubmit}
                     tipoPessoa={tipoPessoa}

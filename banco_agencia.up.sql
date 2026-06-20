@@ -730,68 +730,6 @@ BEGIN
 END;
 $$;
 
-CREATE OR REPLACE PROCEDURE pd_cadastrar_cliente(
-    p_nome VARCHAR(255),
-    p_telefone VARCHAR(15),
-    p_email VARCHAR(320),
-    p_tipo CHAR(1),
-    p_cpf CHAR(11) DEFAULT NULL,
-    p_data_nascimento DATE DEFAULT NULL,
-    p_razao_social VARCHAR(255) DEFAULT NULL,
-    p_cnpj CHAR(14) DEFAULT NULL
-)
-LANGUAGE plpgsql
-AS $$
-DECLARE
-    v_id_pessoa INT;
-    v_id_papel_cliente INT;
-BEGIN
-    SELECT "id" INTO v_id_papel_cliente 
-    FROM "Papel" 
-    WHERE "nome_papel" = 'Cliente';
-    
-    IF v_id_papel_cliente IS NULL THEN
-        RAISE EXCEPTION 'Erro crítico: O papel ''Cliente'' não foi localizado na tabela Papel.';
-    END IF;
-
-
-    INSERT INTO "Pessoa" ("nome", "telefone", "email", "tipo")
-    VALUES (p_nome, p_telefone, p_email, p_tipo)
-    RETURNING "id" INTO v_id_pessoa;
-
-
-    IF p_tipo = 'F' THEN
-        IF p_cpf IS NOT NULL THEN
-            IF EXISTS (SELECT 1 FROM "Pessoa_Fisica" WHERE "cpf" = p_cpf) THEN
-                RAISE EXCEPTION 'Já existe uma Pessoa Física cadastrada com este CPF.';
-            END IF;
-            
-            IF LENGTH(TRIM(p_cpf)) != 11 THEN
-                RAISE EXCEPTION 'O CPF deve conter 11 dígitos.';
-            END IF;
-        END IF;
-        
-        INSERT INTO "Pessoa_Fisica" ("id_pessoa", "cpf", "data_nascimento")
-        VALUES (v_id_pessoa, p_cpf, p_data_nascimento);
-        
-    ELSIF p_tipo = 'J' THEN
-        IF p_cnpj IS NULL OR p_razao_social IS NULL THEN
-            RAISE EXCEPTION 'Para cadastrar Pessoa Jurídica (J), CNPJ e Razão Social são obrigatórios.';
-        END IF;
-        
-        INSERT INTO "Pessoa_Juridica" ("id_pessoa", "razao_social", "cnpj")
-        VALUES (v_id_pessoa, p_razao_social, p_cnpj);
-    ELSE
-        RAISE EXCEPTION 'Tipo de pessoa inválido. Utilize ''F'' ou ''J''.';
-    END IF;
-
-
-    INSERT INTO "Pessoa_Papel" ("id_pessoa", "id_papel")
-    VALUES (v_id_pessoa, v_id_papel_cliente);
-
-    RAISE NOTICE 'Cliente % cadastrado com sucesso! ID: %', p_nome, v_id_pessoa;
-END;
-$$;
 
 
 CREATE OR REPLACE PROCEDURE
@@ -847,7 +785,62 @@ END;
 $$;
 
 
-CREATE OR REPLACE PROCEDURE pd_atualizar_cliente(
+-- Cadastrar pessoa
+CREATE OR REPLACE PROCEDURE pd_cadastrar_pessoa(
+    p_nome VARCHAR(255),
+    p_telefone VARCHAR(15),
+    p_email VARCHAR(320),
+    p_tipo CHAR(1),
+    p_ids_papeis INT[],
+    p_cpf CHAR(11) DEFAULT NULL,
+    p_data_nascimento DATE DEFAULT NULL,
+    p_razao_social VARCHAR(255) DEFAULT NULL,
+    p_cnpj CHAR(14) DEFAULT NULL
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_id_pessoa INT;
+    v_id_papel INT;
+    v_papel INT;
+BEGIN
+
+    INSERT INTO "Pessoa" ("nome", "telefone", "email", "tipo")
+    VALUES (p_nome, p_telefone, p_email, p_tipo)
+    RETURNING "id" INTO v_id_pessoa;
+
+
+    IF p_tipo = 'F' THEN
+
+        INSERT INTO "Pessoa_Fisica" ("id_pessoa", "cpf", "data_nascimento")
+        VALUES (v_id_pessoa, p_cpf, p_data_nascimento);
+
+    ELSIF p_tipo = 'J' THEN
+
+        INSERT INTO "Pessoa_Juridica" ("id_pessoa", "razao_social", "cnpj")
+        VALUES (v_id_pessoa, p_razao_social, p_cnpj);
+
+    ELSE
+        RAISE EXCEPTION 'Tipo inválido. Use F ou J.';
+    END IF;
+
+
+    FOREACH v_papel IN ARRAY p_ids_papeis LOOP
+
+        INSERT INTO "Pessoa_Papel" ("id_pessoa", "id_papel")
+        VALUES (v_id_pessoa, v_papel)
+        ON CONFLICT DO NOTHING;
+
+    END LOOP;
+
+    RAISE NOTICE 'Pessoa cadastrada com ID %', v_id_pessoa;
+END;
+$$;
+
+
+-- Atualizar Pessoa
+
+CREATE OR REPLACE PROCEDURE pd_atualizar_pessoa(
     p_id_pessoa INT,
     p_nome VARCHAR(255),
     p_telefone VARCHAR(15),
@@ -863,43 +856,76 @@ AS $$
 DECLARE
     v_tipo_atual CHAR(1);
 BEGIN
-    SELECT "tipo" INTO v_tipo_atual FROM "Pessoa" WHERE "id" = p_id_pessoa;
-    
+
+    SELECT tipo INTO v_tipo_atual
+    FROM "Pessoa"
+    WHERE id = p_id_pessoa;
+
     IF NOT FOUND THEN
-        RAISE EXCEPTION 'Cliente com ID % não encontrado.', p_id_pessoa;
+        RAISE EXCEPTION 'Pessoa ID % não encontrada', p_id_pessoa;
     END IF;
 
+
     UPDATE "Pessoa"
-    SET "nome" = p_nome,
-        "telefone" = p_telefone,
-        "email" = p_email
-    WHERE "id" = p_id_pessoa;
+    SET nome = p_nome,
+        telefone = p_telefone,
+        email = p_email,
+        tipo = p_tipo
+    WHERE id = p_id_pessoa;
+
 
     IF p_tipo = 'F' THEN
 
-        UPDATE "Pessoa_Fisica"
-        SET "cpf" = p_cpf,
-            "data_nascimento" = p_data_nascimento
+        INSERT INTO "Pessoa_Fisica" ("id_pessoa", "cpf", "data_nascimento")
+        VALUES (p_id_pessoa, p_cpf, p_data_nascimento)
+        ON CONFLICT ("id_pessoa") DO UPDATE
+        SET cpf = EXCLUDED.cpf,
+            data_nascimento = EXCLUDED.data_nascimento;
+
+        DELETE FROM "Pessoa_Juridica"
         WHERE "id_pessoa" = p_id_pessoa;
-        
-        IF NOT FOUND THEN
-            INSERT INTO "Pessoa_Fisica" ("id_pessoa", "cpf", "data_nascimento")
-            VALUES (p_id_pessoa, p_cpf, p_data_nascimento);
-        END IF;
 
     ELSIF p_tipo = 'J' THEN
-        UPDATE "Pessoa_Juridica"
-        SET "razao_social" = p_razao_social,
-            "cnpj" = p_cnpj
+
+        INSERT INTO "Pessoa_Juridica" ("id_pessoa", "razao_social", "cnpj")
+        VALUES (p_id_pessoa, p_razao_social, p_cnpj)
+        ON CONFLICT ("id_pessoa") DO UPDATE
+        SET razao_social = EXCLUDED.razao_social,
+            cnpj = EXCLUDED.cnpj;
+
+
+        DELETE FROM "Pessoa_Fisica"
         WHERE "id_pessoa" = p_id_pessoa;
 
-        IF NOT FOUND THEN
-            INSERT INTO "Pessoa_Juridica" ("id_pessoa", "razao_social", "cnpj")
-            VALUES (p_id_pessoa, p_razao_social, p_cnpj);
-        END IF;
+    ELSE
+        RAISE EXCEPTION 'Tipo inválido';
     END IF;
 
-    RAISE NOTICE 'Cliente ID % atualizado com sucesso!', p_id_pessoa;
+    RAISE NOTICE 'Pessoa ID % atualizada com sucesso', p_id_pessoa;
+END;
+$$;
+
+
+
+-- Atualizar papeis das pessoas [WARN: Pessoa sem papel PODE desaparecer ]
+CREATE OR REPLACE PROCEDURE pd_atualizar_papeis_pessoa(
+    p_id_pessoa INT,
+    p_ids_papeis INT[]
+)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_papel INT;
+BEGIN
+    DELETE FROM "Pessoa_Papel"
+    WHERE "id_pessoa" = p_id_pessoa;
+
+    FOREACH v_papel IN ARRAY p_ids_papeis LOOP
+        INSERT INTO "Pessoa_Papel" ("id_pessoa", "id_papel")
+        VALUES (p_id_pessoa, v_papel);
+    END LOOP;
+
+    RAISE NOTICE 'Papéis atualizados para pessoa %', p_id_pessoa;
 END;
 $$;
 -- Início: 007_conexao_externa.up.sql

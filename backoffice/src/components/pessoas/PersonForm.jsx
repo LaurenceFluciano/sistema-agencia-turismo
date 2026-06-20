@@ -24,11 +24,11 @@ import { Button } from "../ui/button"
 
 import { useState } from "react";
 
-export default function ClientForm({ initialData, tipoPessoa, setTipoPessoa, onSubmit, isEditing, error, success }) {
+export default function PersonForm({ initialData, tipoPessoa, setTipoPessoa, onSubmit, isEditing, error, success }) {
     const [alignItemWithTrigger, setAlignItemWithTrigger] = useState(true)
 
     return (
-        <form onSubmit={onSubmit}>
+        <form onSubmit={onSubmit} key={initialData?.id || "new-client"}>
             <DialogHeader className="px-8 py-4">
                 <DialogTitle className="text-2xl font-bold">
                     {isEditing ? "Editar Cliente" : "Cadastrar Cliente"}
@@ -92,42 +92,20 @@ export default function ClientForm({ initialData, tipoPessoa, setTipoPessoa, onS
                     </Select>
                 </Field>
 
-                <Field>
-                    { tipoPessoa === 'F' ? (
-                    <>
-                        <Label htmlFor="cpf">CPF:</Label>
-                        <Input 
-                            id="cpf" 
-                            name="cpf" 
-                            placeholder="CPF"
-                            defaultValue={initialData?.cpf || ""}
-                        />
-                    </>
-                    ) : (
-                    <>
-                        <Label htmlFor="cnpj">CNPJ:</Label>
-                        <Input 
-                            id="cnpj" 
-                            name="cnpj" 
-                            placeholder="CNPJ"
-                            defaultValue={initialData?.cnpj || ""}
-                        />
-                    </>
-                    )}
+
+                <Field className={tipoPessoa === 'F' ? '' : 'hidden'}>
+                    <Label htmlFor="cpf">CPF:</Label>
+                    <Input id="cpf" name="cpf" placeholder="CPF" defaultValue={initialData?.cpf || ""} />
                 </Field>
 
-                <Field>
-                    { tipoPessoa === 'J' && (
-                    <>
-                        <Label htmlFor="razao_social">Razao Social:</Label>
-                        <Input 
-                            id="razao_social" 
-                            name="razao_social" 
-                            placeholder="Razao Social"
-                            defaultValue={initialData?.razao_social || ""}
-                        />
-                    </>
-                    )}
+                <Field className={tipoPessoa === 'J' ? '' : 'hidden'}>
+                    <Label htmlFor="cnpj">CNPJ:</Label>
+                    <Input id="cnpj" name="cnpj" placeholder="CNPJ" defaultValue={initialData?.cnpj || ""} />
+                </Field>
+
+                <Field className={tipoPessoa === 'J' ? '' : 'hidden'}>
+                    <Label htmlFor="razao_social">Razão Social:</Label>
+                    <Input id="razao_social" name="razao_social" placeholder="Razão Social" defaultValue={initialData?.razao_social || ""} />
                 </Field>
         
             </FieldGroup>

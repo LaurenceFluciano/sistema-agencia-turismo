@@ -3,10 +3,10 @@
 import sql from "../db";
 
 
-async function listClients(filters) {
+async function listPeople(filters) {
     
-    const clientes = await sql`
-        SELECT 
+    const pessoas = await sql`
+        SELECT DISTINCT
         pe.id, 
         pe.nome, 
         pe.email, 
@@ -18,32 +18,34 @@ async function listClients(filters) {
         JOIN "Pessoa_Papel" pp ON pp."id_pessoa" = pe."id"
         LEFT JOIN "Pessoa_Fisica" pf ON pf."id_pessoa" = pe."id"
         LEFT JOIN "Pessoa_Juridica" pj ON pj."id_pessoa" = pe."id"
-        WHERE pp."id_papel" = 1 
+        WHERE 1 = 1 
         ${filters}
     `;
 
 
-    return clientes;
+    return pessoas;
 }
 
-async function registerClient(clientData) {
+async function registerPerson(personData) {
     try {
-        const nome = clientData.nome || null;
-        const telefone = clientData.telefone || null;
-        const email = clientData.email || null;
-        const tipo_pessoa = clientData.pessoa || "F";
+        const nome = personData.nome || null;
+        const telefone = personData.telefone || null;
+        const email = personData.email || null;
+        const tipo_pessoa = personData.pessoa || "F";
 
-        const cpf = clientData.cpf || null;
-        const data_nascimento = clientData.data_nascimento || null;
-        const razao_social = clientData.razao_social || null;
-        const cnpj = clientData.cnpj || null;
+        const cpf = personData.cpf || null;
+        const data_nascimento = personData.data_nascimento || null;
+        const razao_social = personData.razao_social || null;
+        const cnpj = personData.cnpj || null;
+        const id_papeis = personData.papel || [1];
 
         await sql`
-            CALL pd_cadastrar_cliente(
+            CALL pd_cadastrar_pessoa(
                 ${nome}, 
                 ${telefone}, 
                 ${email}, 
-                ${tipo_pessoa}, 
+                ${tipo_pessoa},
+                ${id_papeis}, 
                 ${cpf}, 
                 ${data_nascimento}, 
                 ${razao_social}, 
@@ -59,25 +61,25 @@ async function registerClient(clientData) {
     }
 }
 
-async function updateClient(clientData, id) {
+async function updatePerson(personData, id) {
     try {
-        const nome = clientData.nome || null;
-        const telefone = clientData.telefone || null;
-        const email = clientData.email || null;
-        const tipo_pessoa = clientData.pessoa || "F";
+        const nome = personData.nome || null;
+        const telefone = personData.telefone || null;
+        const email = personData.email || null;
+        const tipo_pessoa = personData.pessoa || "F";
 
-        const cpf = clientData.cpf || null;
-        const data_nascimento = clientData.data_nascimento || null;
-        const razao_social = clientData.razao_social || null;
-        const cnpj = clientData.cnpj || null;
+        const cpf = personData.cpf || null;
+        const data_nascimento = personData.data_nascimento || null;
+        const razao_social = personData.razao_social || null;
+        const cnpj = personData.cnpj || null;
 
         await sql`
-            CALL pd_atualizar_cliente(
+            CALL pd_atualizar_pessoa(
                 ${id},
                 ${nome}, 
                 ${telefone}, 
                 ${email}, 
-                ${tipo_pessoa}, 
+                ${tipo_pessoa},
                 ${cpf}, 
                 ${data_nascimento}, 
                 ${razao_social}, 
@@ -85,7 +87,7 @@ async function updateClient(clientData, id) {
             )
         `;
 
-        return { success: true, message: "Cliente atualizado com sucesso!" };
+        return { success: true, message: "Pessoa atualizado com sucesso!" };
 
     } catch (error) {
         console.error("Erro ao executar procedure:", error.message);
@@ -95,16 +97,16 @@ async function updateClient(clientData, id) {
 
 
 
-async function deleteClient(id) {
+async function deletePerson(id) {
     // Melhoria: [ ] Soft Delete
     try {
         await sql`DELETE FROM "Pessoa" WHERE id = ${id}`;
 
-        return { success: true, message: "Cliente removido com sucesso." }
+        return { success: true, message: "Pessoa removido com sucesso." }
     } catch (error) {
         console.error("Erro ao executar a query: ", error.message);
         return { success: false, message: "Erro ao remover o cliente" }
     }
 }
 
-export { listClients, registerClient, deleteClient, updateClient };
+export { listPeople, registerPerson, deletePerson, updatePerson };
