@@ -1,6 +1,7 @@
 import buildPersonFilters from "@/services/clientes/client.filter";
 import listClients from "@/services/clientes/client.repository";
 import ClientCard from "@/components/organism/ClientCard";
+import RegisterClientDialog from "@/components/organism/RegisterClientDialog";
 
 export default async function Page({ searchParams }) {
   const params = await searchParams;
@@ -10,8 +11,9 @@ export default async function Page({ searchParams }) {
 
   return (
     <main className="max-w-7xl mx-auto p-6 md:p-12 min-h-screen bg-background text-foreground">
-      <div className="mb-8">
+      <div className="mb-8 flex">
         <h1 className="text-3xl font-extrabold tracking-tight">Clientes</h1>
+        <RegisterClientDialog className="ml-auto" />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -24,6 +26,8 @@ export default async function Page({ searchParams }) {
           <ClientCard key={cliente.id} cliente={cliente} />
         ))}
       </div>
+
+      
     </main>
   );
 }
