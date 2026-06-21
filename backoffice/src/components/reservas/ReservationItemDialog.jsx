@@ -1,159 +1,108 @@
 'use client'
+import { useState, useEffect } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { listReservationItemsByReservationId, updateReservationItemPrices } from "@/services/reservas/reservation.repository";
+import { Alert } from "../ui/alert";
+import { useRouter } from "next/navigation";
 
-import { useEffect, useState } from "react";
-import { Button } from "../ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { DialogFooter } from "../ui/dialog";
-import { listOffers } from "@/services/ofertas/offers.repository";
+export default function ReservationItemDialog({ reservaId, open, onOpenChange }) {
+    const [items, setItems] = useState([]);
+    const [error, setError] = useState(null);
+    const [success, setSuccess] = useState(null);
 
-/**
- * @typedef {Object} Oferta
- * @property {number} id_fornecedor_servico
- * @property {string} nome_comercial
- * @property {string} municipio_cidade
- * @property {string} nome_estado
- * @property {string} tipo_servico
- * @property {string} status_fornecedor
- */
-
-/**
- * @typedef {Object} ReservaItem
- * @property {number} id_fornecedor_servico
- * @property {string} nomeOferta
- * @property {string} cidade
- * @property {string} estado
- * @property {number} [custo_fornecedor]
- * @property {number} [preco_venda]
- */
-
-export default function ReservationItemDialog({ setReservaItems , onBack}) {
-    const [offers, setOffers] = useState([]);
-    const [loading, setLoading] = useState(true);
-    
-    const [selectedOffers, setSelectedOffers] = useState([]);
+    const router = useRouter()
 
     useEffect(() => {
-        async function loadData() {
-            try {
-                setLoading(true);
-                const data = await listOffers();
-                setOffers(data || []);
-            } catch (error) {
-                console.error("Erro ao carregar ofertas:", error);
-            } finally {
-                setLoading(false);
-            }
+        setError(null)
+        setSuccess(null)
+        setItems([])
+
+        if (open && reservaId) {
+            listReservationItemsByReservationId(reservaId).then(setItems);
         }
-        loadData();
-    }, []);
+    }, [open, reservaId]);
 
-    const handleToggleSelect = (oferta) => {
-        setSelectedOffers((prev) => {
-            const exists = prev.some(
-                (item) => item.id_fornecedor_servico === oferta.id_fornecedor_servico
-            );
-
-            if (exists) {
-                return prev.filter(
-                    (item) => item.id_fornecedor_servico !== oferta.id_fornecedor_servico
-                );
-            }
-
-            return [...prev, oferta];
-        });
+    const handlePriceChange = (id, field, value) => {
+        setItems(items.map(i => 
+            i.id_fornecedor_servico === id ? { ...i, [field]: value } : i
+        ));
     };
 
-    const handleConfirmSelection = () => {
-        setReservaItems((prevItems) => {
-            const existingIds = new Set(prevItems.map(item => item.id_oferta));
-            
-            const newItems = selectedOffers
-                .filter(oferta => !existingIds.has(oferta.id))
-                .map(oferta => ({
-                    id_fornecedor_servico: oferta.id_fornecedor_servico,
-                    nomeOferta: oferta.nome_comercial,
-                    cidade: oferta.municipio_cidade,
-                    estado: oferta.nome_estado,
-                    quantidade: 1
-                }));
+    const handleSave = async () => {
+        setError(null)
+        setSuccess(null)
 
-            return [...prevItems, ...newItems];
-        });
+        const result = await updateReservationItemPrices(items, reservaId);
 
-        if (onBack) onBack();
+        if (result.success) {
+            setSuccess(result.message)
+            router.refresh()
+        } else {
+            setError(result.message)
+        }
     };
-    
-    
 
     return (
-        <div className="flex flex-col h-full w-min-2xl">
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            {items.length > 0 && <DialogContent className="max-w-4xl min-w-2xl max-h-[80vh] overflow-y-auto">
+                <DialogHeader>
+                    <DialogTitle>Editar Preços dos Itens</DialogTitle>
+                </DialogHeader>
 
-            <h2 className="text-lg font-semibold px-8 mb-8">Selecione as Ofertas</h2>
 
-
-
-            <div className="grid grid-cols-2 gap-4 flex-1 overflow-y-auto pr-2 px-8">
-                {loading ? (
-                    <p className="text-sm text-muted-foreground col-span-2 text-center py-4">Carregando...</p>
-                ) : 
-                    offers.map((oferta) => {
-                    
-                        const isSelected = selectedOffers.some((item) => item.id_fornecedor_servico === oferta.id_fornecedor_servico);
-
-                        return (
-                            <Card 
-                                key={oferta.id_fornecedor_servico} 
-                                onClick={() => handleToggleSelect(oferta)}
-                                className={`group border cursor-pointer transition-all duration-200 ${
-                                    isSelected 
-                                        ? "border-primary bg-primary/5 ring-1 ring-primary" 
-                                        : "border-border bg-card hover:border-primary"
-                                }`}
-                            >
-                                <CardHeader className="flex flex-row justify-between items-center py-3 px-4 border-b border-border bg-muted/20">
-                                    <CardTitle className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
-                                        {oferta.tipo_servico}
-                                    </CardTitle>
-                                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
-                                        oferta.status_fornecedor === 'ATIVO' 
-                                            ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" 
-                                            : "bg-amber-500/10 text-amber-600 border-amber-500/20"
-                                    }`}>
-                                        {oferta.status_fornecedor}
-                                    </span>
-                                </CardHeader>
-                                <CardContent className="p-4 space-y-1">
-                                    <p className="text-sm font-semibold text-foreground">{oferta.nome_comercial}</p>
+                <div className="grid grid-cols-3 gap-4 py-4 w-min-2xl">
+                    {items.map((reservaItem) => (
+                        <Card key={reservaItem.id_fornecedor_servico} className="flex flex-col w-full">
+                            <CardHeader className="py-3 bg-muted/20 border-b">
+                                <CardTitle className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
+                                    {reservaItem.nomeoferta}
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-3 pt-4">
+                                <p className="text-sm font-semibold">{reservaItem.nome_comercial}</p>
+                                
+                                <div className="space-y-2">
+                                    <label className="text-[10px] uppercase font-bold text-muted-foreground">Custo Fornecedor</label>
+                                    <Input 
+                                        type="number" 
+                                        className="h-8"
+                                        value={reservaItem.custo_fornecedor || ""} 
+                                        onChange={(e) => handlePriceChange(reservaItem.id_fornecedor_servico, 'custo_fornecedor', e.target.value)}
+                                    />
                                     
-                                    <p className="text-xs text-muted-foreground/80 font-medium">
-                                        Serviço: {oferta.nome_oficial_servico}
-                                    </p>
-                                    
-                                    <p className="text-xs text-muted-foreground">
-                                        Local: {oferta.municipio_cidade} — {oferta.sigla_estado}
-                                    </p>
-                                    
-                                    <p className="text-[10px] text-muted-foreground/50 pt-1">
-                                        ID: #{oferta.id_fornecedor_servico}
-                                    </p>
-                                </CardContent>
-                            </Card>
-                        );
-                    })
-                }
-                
-                
-            </div>
-            
-            <DialogFooter className="pt-6 mt-6 border-t border-zinc-800 px-8">
-                <Button 
-                    onClick={handleConfirmSelection} 
-                    disabled={selectedOffers.length === 0}
-                    className="w-full sm:w-auto ml-auto"
-                >
-                    Adicionar Selecionados
-                </Button>
-            </DialogFooter>
-        </div>
-    )
+                                    <label className="text-[10px] uppercase font-bold text-muted-foreground">Preço Venda</label>
+                                    <Input 
+                                        type="number" 
+                                        className="h-8"
+                                        value={reservaItem.preco_venda || ""} 
+                                        onChange={(e) => handlePriceChange(reservaItem.id_fornecedor_servico, 'preco_venda', e.target.value)}
+                                    />
+                                </div>
+                            </CardContent>
+                        </Card>
+                    ))}
+                </div>
+
+
+                <div className="px-8 pt-4 space-y-2">
+                    {error && <Alert variant="destructive">{error}</Alert>}
+                    {success && <Alert className="border-green-500 text-green-600">{success}</Alert>}
+                </div>
+
+                <div className="flex justify-end pt-4 border-t">
+                    <Button onClick={handleSave}>Salvar Alterações</Button>
+                </div>
+            </DialogContent>}
+
+            {items.length <= 0 && 
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Essa reserva não tem items.</DialogTitle>
+                    </DialogHeader>
+                </DialogContent>}
+        </Dialog>
+    );
 }

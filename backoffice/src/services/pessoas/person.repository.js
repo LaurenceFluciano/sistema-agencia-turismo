@@ -114,7 +114,7 @@ async function searchClientsByName(name) {
     const clientes = await sql`
         SELECT
             pe.id,
-            pe.nome,
+            pe.nome as nome_cliente,
             pf.cpf,
             pe.email
         FROM "Pessoa" pe

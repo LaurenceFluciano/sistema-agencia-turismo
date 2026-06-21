@@ -39,7 +39,7 @@ export default function ClientCombobox({ clientes, value, onChange, onSearch }) 
     <Popover open={open} onOpenChange={setOpen}>
      <PopoverTrigger asChild>
         <Button variant="outline" className="w-full justify-between">
-          {value?.nome ?? "Selecione um cliente..."}
+          {value?.nome_cliente ?? "Selecione um cliente..."}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
@@ -53,13 +53,13 @@ export default function ClientCombobox({ clientes, value, onChange, onSearch }) 
                 <CommandItem
                   className="flex flex-col items-start justify-start gap-0"
                   key={`${cliente.id}-${index}`}
-                  value={cliente.nome}
+                  value={cliente.nome_cliente}
                   onSelect={() => {
                     onChange(cliente)
                     setOpen(false)
                   }}
                 >
-                  <span className="text-md">{cliente.nome}</span> 
+                  <span className="text-md">{cliente.nome_cliente}</span> 
                   { cliente.email && (<span className="text-xs text-muted-foreground">email: {cliente.email}</span>)}
                   { cliente.cpf && (<span className="text-xs text-muted-foreground">cpf: {cliente.cpf}</span>)}
                 </CommandItem>
