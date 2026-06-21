@@ -255,3 +255,30 @@ BEGIN
     RETURN v_lucro_reserva;
 END;
 $$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION fn_validar_pagamento_pago()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.status = 'PAGO' AND NEW.valor <= 0 THEN
+        RAISE EXCEPTION 'Pagamentos com status PAGO devem possuir um valor positivo.';
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION fn_validar_status_reserva_pagamento()
+RETURNS TRIGGER AS $$
+DECLARE
+    v_status_reserva tipo_status_reserva;
+BEGIN
+    SELECT "status" INTO v_status_reserva FROM "Reserva" WHERE "id" = NEW.id_reserva;
+
+    IF v_status_reserva IN ('PENDENTE', 'RASCUNHO', 'CANCELADA') THEN
+        RAISE EXCEPTION 'Não é permitido registrar pagamentos para reservas com status %.', v_status_reserva;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+

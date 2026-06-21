@@ -62,6 +62,11 @@ DROP TRIGGER IF EXISTS tg_marcar_reserva_como_concluido_ou_em_atraso ON "Pagamen
 
 DROP TRIGGER IF EXISTS  trg_check_pessoa_fisica ON "Pessoa_Fisica";
 DROP TRIGGER IF EXISTS  trg_check_pessoa_juridica ON "Pessoa_Juridica";
+
+
+DROP TRIGGER IF EXISTS trg_validar_pagamento_pago ON "Pagamento";
+
+DROP TRIGGER IF EXISTS trg_validar_status_reserva ON "Pagamento";
 -- Início: 003_constraint.down.sql
 
 
@@ -99,6 +104,9 @@ DROP FUNCTION IF EXISTS fn_atualiza_data_atualizacao() CASCADE;
 
 DROP FUNCTION IF EXISTS fn_validar_periodo(anyelement, anyelement) CASCADE;
 
+DROP FUNCTION IF EXISTS fn_validar_pagamento_pago() CASCADE;
+
+DROP FUNCTION IF EXISTS fn_validar_status_reserva_pagamento() CASCADE;
 -- Início: 001_ddl.down.sql
 DROP TABLE IF EXISTS "Passageiro" CASCADE;
 DROP TABLE IF EXISTS "Itinerario" CASCADE;

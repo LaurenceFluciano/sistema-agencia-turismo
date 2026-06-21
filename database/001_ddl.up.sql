@@ -93,7 +93,7 @@ CREATE TABLE "Servico" (
   "nome_oficial" VARCHAR(255),
   "id_municipio" INT,
   "data_atualizacao" TIMESTAMP DEFAULT NOW(),
-  "status" tipo_status_servico DEFAULT 'EM_ANALISE',
+  "status" tipo_status_servico DEFAULT 'ATIVO',
   "id_tipo" INT,
 
   CONSTRAINT "pk_servico" PRIMARY KEY ("id")
@@ -205,7 +205,7 @@ ALTER TABLE "Pacote_Item" ADD FOREIGN KEY ("id_pacote") REFERENCES "Pacote" ("id
 
 ALTER TABLE "Reserva" ADD FOREIGN KEY ("id_pacote") REFERENCES "Pacote" ("id");
 ALTER TABLE "Reserva" ADD FOREIGN KEY ("id_cliente") REFERENCES "Pessoa" ("id");
-ALTER TABLE "Pagamento" ADD FOREIGN KEY ("id_reserva") REFERENCES "Reserva" ("id");
+ALTER TABLE "Pagamento" ADD FOREIGN KEY ("id_reserva") REFERENCES "Reserva" ("id") ON DELETE RESTRICT;
 
 ALTER TABLE "Reserva_Item" ADD FOREIGN KEY ("id_reserva") REFERENCES "Reserva" ("id");
 ALTER TABLE "Reserva_Item" ADD FOREIGN KEY ("id_fornecedor_servico") REFERENCES "Fornecedor_Servico" ("id");
@@ -222,7 +222,3 @@ ALTER TABLE "Passageiro" ADD CONSTRAINT "fk_passageiro_pessoa_fisica"
 
 
 ALTER TABLE "Reserva_Item" ADD COLUMN "gerado_pelo_pacote" BOOLEAN DEFAULT FALSE;
-
-
-ALTER TABLE "Reserva_Item"
-ADD COLUMN "percentual_desconto_venda" NUMERIC(5,2) DEFAULT 0;

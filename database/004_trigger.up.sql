@@ -48,3 +48,13 @@ FOR EACH ROW EXECUTE FUNCTION check_pessoa_fisica_tipo();
 CREATE TRIGGER trg_check_pessoa_juridica
 BEFORE INSERT OR UPDATE ON "Pessoa_Juridica"
 FOR EACH ROW EXECUTE FUNCTION check_pessoa_juridica_tipo();
+
+
+CREATE TRIGGER trg_validar_pagamento_pago
+BEFORE INSERT OR UPDATE ON "Pagamento"
+FOR EACH ROW EXECUTE FUNCTION fn_validar_pagamento_pago();
+
+
+CREATE TRIGGER trg_validar_status_reserva
+BEFORE INSERT ON "Pagamento"
+FOR EACH ROW EXECUTE FUNCTION fn_validar_status_reserva_pagamento();

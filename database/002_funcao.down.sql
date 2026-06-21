@@ -30,3 +30,7 @@ DROP FUNCTION IF EXISTS fn_calcular_lucro_reserva(INT) CASCADE;
 DROP FUNCTION IF EXISTS fn_atualiza_data_atualizacao() CASCADE;
 
 DROP FUNCTION IF EXISTS fn_validar_periodo(anyelement, anyelement) CASCADE;
+
+DROP FUNCTION IF EXISTS fn_validar_pagamento_pago() CASCADE;
+
+DROP FUNCTION IF EXISTS fn_validar_status_reserva_pagamento() CASCADE;

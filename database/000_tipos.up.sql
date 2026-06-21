@@ -37,6 +37,5 @@ CREATE TYPE tipo_status_servico AS ENUM (
   'ATIVO',
   'INATIVO',
   'MANUTENCAO',
-  'INTERDITADO',
-  'EM_ANALISE'
+  'INTERDITADO'
 );
