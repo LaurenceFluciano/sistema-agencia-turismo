@@ -109,4 +109,22 @@ async function deletePerson(id) {
     }
 }
 
-export { listPeople, registerPerson, deletePerson, updatePerson };
+async function searchClientsByName(name) {
+    const searchTerm = `%${name}%`;
+    const clientes = await sql`
+        SELECT
+            pe.id,
+            pe.nome,
+            pf.cpf,
+            pe.email
+        FROM "Pessoa" pe
+        LEFT JOIN "Pessoa_Fisica" pf ON pe."id" = pf."id_pessoa"
+        JOIN "Pessoa_Papel" pp ON pp."id_pessoa" = pe."id"
+        WHERE pe."nome" ILIKE ${searchTerm}
+        AND "id_papel" = 1
+    `
+
+    return clientes
+}
+
+export { listPeople, registerPerson, deletePerson, updatePerson, searchClientsByName };
