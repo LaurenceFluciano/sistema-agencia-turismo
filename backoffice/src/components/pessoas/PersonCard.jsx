@@ -8,7 +8,7 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu"
-import { deletePerson } from "@/services/pessoas/person.repository";
+import { useToast } from "@/components/ui/toast";
 
 import { useRouter } from "next/navigation"
 import PersonDialog from "./PersonDialog";
@@ -25,13 +25,40 @@ export default function PersonCard({
     };
 
     const router = useRouter()
+    const toast = useToast();
 
     const isAtivo = pessoa.status?.toLowerCase() === "ativo";
 
-    const remove = async () => {
-      await deletePerson(pessoa.id)
+    const handleDelete = async (personId) => {
+      try {
+        if (!personId) {
+          throw new Error("ID de pessoa inválido no cliente.");
+        }
 
-      router.refresh();
+        const response = await fetch(`/api/pessoas/${personId}`, {
+          method: "DELETE",
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "Não foi possível excluir a pessoa.");
+        }
+
+        toast.add({
+          title: "Pessoa excluída",
+          description: data.message || "Exclusão realizada com sucesso.",
+          type: "success",
+        });
+
+        router.refresh();
+      } catch (error) {
+        toast.add({
+          title: "Erro ao excluir",
+          description: String(error.message || error),
+          type: "error",
+        });
+      }
     }
 
     return (
@@ -124,7 +151,7 @@ export default function PersonCard({
 
                 <DropdownMenuItem 
                   className="text-red-400" 
-                  onClick={remove}
+                  onSelect={() => handleDelete(pessoa.id)}
                 >
                   Excluir
                 </DropdownMenuItem>

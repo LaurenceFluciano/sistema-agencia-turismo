@@ -24,7 +24,7 @@ import { Button } from "../ui/button"
 
 import { useState } from "react";
 
-export default function PersonForm({ initialData, tipoPessoa, setTipoPessoa, onSubmit, isEditing, error, success }) {
+export default function PersonForm({ initialData, tipoPessoa, setTipoPessoa, papel, setPapel, onSubmit, isEditing, error, success }) {
     const [alignItemWithTrigger, setAlignItemWithTrigger] = useState(true)
 
     return (
@@ -92,6 +92,22 @@ export default function PersonForm({ initialData, tipoPessoa, setTipoPessoa, onS
                     </Select>
                 </Field>
 
+                <Field>
+                    <Label htmlFor="papel">Papel:</Label>
+                    <Select value={papel} onValueChange={setPapel}>
+                        <SelectTrigger id="papel">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent
+                            position={alignItemWithTrigger ? "item-aligned" : "popper"}
+                        >
+                            <SelectGroup>
+                                <SelectItem value="1">Cliente</SelectItem>
+                                <SelectItem value="2">Fornecedor</SelectItem>
+                            </SelectGroup>
+                        </SelectContent>
+                    </Select>
+                </Field>
 
                 <Field className={tipoPessoa === 'F' ? '' : 'hidden'}>
                     <Label htmlFor="cpf">CPF:</Label>

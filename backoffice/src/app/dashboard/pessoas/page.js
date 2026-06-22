@@ -2,6 +2,7 @@ import buildPersonFilters from "@/services/pessoas/person.filter";
 import { listPeople } from "@/services/pessoas/person.repository"
 import PersonCard from "@/components/pessoas/PersonCard";
 import PersonActions from "@/components/pessoas/PersonActions";
+import FilterPessoas from "@/components/pessoas/FilterPessoas";
 
 export default async function Page({ searchParams }) {
   const params = await searchParams;
@@ -11,9 +12,14 @@ export default async function Page({ searchParams }) {
 
   return (
     <main className="max-w-7xl mx-auto p-6 md:p-12 min-h-screen bg-background text-foreground">
-      <div className="mb-8 flex">
+      <div className="mb-8 flex items-center gap-4">
         <h1 className="text-3xl font-extrabold tracking-tight">Pessoas</h1>
-        <PersonActions />
+        <div className="ml-4">
+          <FilterPessoas />
+        </div>
+        <div className="ml-auto">
+          <PersonActions />
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">

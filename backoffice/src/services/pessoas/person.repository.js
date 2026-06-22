@@ -6,22 +6,30 @@ import sql from "../db";
 async function listPeople(filters) {
     
     const pessoas = await sql`
-        SELECT DISTINCT
-        pe.id, 
-        pe.nome, 
-        pe.email, 
-        pe.telefone, 
-        pe.status, 
-        pf.cpf, 
-        pj.cnpj
+        SELECT
+            pe.id,
+            pe.nome,
+            pe.email,
+            pe.telefone,
+            pe.status,
+            pf.cpf,
+            pj.cnpj,
+            ARRAY_AGG(DISTINCT pp."id_papel") AS papeis
         FROM "Pessoa" pe
         JOIN "Pessoa_Papel" pp ON pp."id_pessoa" = pe."id"
         LEFT JOIN "Pessoa_Fisica" pf ON pf."id_pessoa" = pe."id"
         LEFT JOIN "Pessoa_Juridica" pj ON pj."id_pessoa" = pe."id"
-        WHERE 1 = 1 
+        WHERE 1 = 1
         ${filters}
+        GROUP BY
+            pe.id,
+            pe.nome,
+            pe.email,
+            pe.telefone,
+            pe.status,
+            pf.cpf,
+            pj.cnpj
     `;
-
 
     return pessoas;
 }
@@ -37,7 +45,7 @@ async function registerPerson(personData) {
         const data_nascimento = personData.data_nascimento || null;
         const razao_social = personData.razao_social || null;
         const cnpj = personData.cnpj || null;
-        const id_papeis = personData.papel || [1];
+        const id_papeis = personData.papel ? [Number(personData.papel)] : [1];
 
         await sql`
             CALL pd_cadastrar_pessoa(
@@ -72,6 +80,7 @@ async function updatePerson(personData, id) {
         const data_nascimento = personData.data_nascimento || null;
         const razao_social = personData.razao_social || null;
         const cnpj = personData.cnpj || null;
+        const id_papeis = personData.papel ? [Number(personData.papel)] : null;
 
         await sql`
             CALL pd_atualizar_pessoa(
@@ -87,7 +96,16 @@ async function updatePerson(personData, id) {
             )
         `;
 
-        return { success: true, message: "Pessoa atualizado com sucesso!" };
+        if (id_papeis) {
+            await sql`
+                CALL pd_atualizar_papeis_pessoa(
+                    ${id},
+                    ${id_papeis}
+                )
+            `;
+        }
+
+        return { success: true, message: "Pessoa atualizada com sucesso!" };
 
     } catch (error) {
         console.error("Erro ao executar procedure:", error.message);
@@ -98,14 +116,35 @@ async function updatePerson(personData, id) {
 
 
 async function deletePerson(id) {
-    // Melhoria: [ ] Soft Delete
-    try {
-        await sql`DELETE FROM "Pessoa" WHERE id = ${id}`;
+    const pessoaId = typeof id === "string" ? Number(id) : id;
 
-        return { success: true, message: "Pessoa removido com sucesso." }
+    if (!Number.isInteger(pessoaId) || pessoaId <= 0) {
+        throw new Error("ID de pessoa inválido.");
+    }
+
+    try {
+        const [hasReservation] = await sql`
+            SELECT EXISTS (
+                SELECT 1 FROM "Reserva" WHERE "id_cliente" = ${pessoaId}
+            ) AS has_reservation
+        `;
+
+        const [hasSupplierService] = await sql`
+            SELECT EXISTS (
+                SELECT 1 FROM "Fornecedor_Servico" WHERE "id_pessoa" = ${pessoaId}
+            ) AS has_supplier_service
+        `;
+
+        if (hasReservation?.has_reservation || hasSupplierService?.has_supplier_service) {
+            throw new Error("Não é possível excluir: Esta pessoa possui reservas ou ofertas vinculadas.");
+        }
+
+        await sql`DELETE FROM "Pessoa" WHERE id = ${pessoaId}`;
+
+        return { success: true, message: "Pessoa removida com sucesso." };
     } catch (error) {
         console.error("Erro ao executar a query: ", error.message);
-        return { success: false, message: "Erro ao remover o cliente" }
+        throw error;
     }
 }
 

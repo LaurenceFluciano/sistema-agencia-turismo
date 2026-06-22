@@ -45,6 +45,21 @@ function buildPersonFilters(searchParams) {
     }
   }
 
+  // filter by papel (role) - e.g., CLIENTE or FORNECEDOR
+  if (searchParams.papel) {
+    const papel = String(searchParams.papel).trim().toUpperCase();
+    if (papel === "CLIENTE") {
+      filters.push(sql`AND pp."id_papel" = ${1}`);
+    } else if (papel === "FORNECEDOR") {
+      filters.push(sql`AND pp."id_papel" = ${2}`);
+    } else if (!Number.isNaN(Number(papel))) {
+      // allow numeric papel id
+      filters.push(sql`AND pp."id_papel" = ${Number(papel)}`);
+    } else {
+      console.warn(`Papel inválido ignorado: ${searchParams.papel}`);
+    }
+  }
+
   return filters.length > 0 ? sql`${filters}` : sql``;
 }
 
