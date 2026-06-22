@@ -65,7 +65,15 @@ export default function DialogPacote({ pacoteParaEditar = null, open: openProp =
   useEffect(() => {
     if (open && pacoteParaEditar) {
       setNome(pacoteParaEditar.nome || "");
-      setItensSelecionados(pacoteParaEditar.itensSelecionados ?? pacoteParaEditar.itens ?? []);
+      
+      console.log("Pacote recebido para edição:", pacoteParaEditar);
+
+      const itens = pacoteParaEditar.itensSelecionados ?? 
+                    pacoteParaEditar.itens ?? 
+                    pacoteParaEditar.items ?? 
+                    [];
+
+      setItensSelecionados(itens);
       setStep(1);
     }
   }, [open, pacoteParaEditar]);

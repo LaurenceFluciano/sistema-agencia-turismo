@@ -3,7 +3,7 @@ import { deletePacote, updatePacote } from '../../../../services/pacotes/package
 
 export async function DELETE(request, { params }) {
   try {
-    let { id } = params || {};
+    let { id } = await params || {};
     if (!id) {
       const url = new URL(request.url);
       const parts = url.pathname.split("/").filter(Boolean);
@@ -25,7 +25,7 @@ export async function DELETE(request, { params }) {
 
 export async function PUT(request, { params }) {
   try {
-    let { id } = params || {};
+    let { id } = await params || {};
     if (!id) {
       const url = new URL(request.url);
       const parts = url.pathname.split("/").filter(Boolean);
