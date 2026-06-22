@@ -10,7 +10,7 @@ export default function ItinerarioFilter() {
         <div className="flex flex-wrap gap-4 p-4 border rounded-lg">
             
             <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium">Buscar Roteiro</label>
+                <label className="text-sm font-medium">Buscar:</label>
                 <Input 
                     placeholder="Nome do serviço ou evento..."
                     onChange={(e) => setFilter("searchByRoteiro", e.target.value)}

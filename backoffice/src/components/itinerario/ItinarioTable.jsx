@@ -12,6 +12,7 @@ import { useState } from "react";
 import { deleteItinerarios } from "@/services/itinerarios/itinerarios.repository";
 import { Button } from "../ui/button";
 import { useRouter } from "next/navigation";
+import { ItinerarioDetailsDialog } from "./ItinerarioDetailsDialog";
 
 export default function ItinerarioTable({ data, idReserva }) {
     const router = useRouter();
@@ -39,6 +40,9 @@ export default function ItinerarioTable({ data, idReserva }) {
             <TableHeader>
             <TableRow>
                 <TableHead className="w-12">
+                    Ver Roteiro
+                </TableHead>
+                <TableHead className="w-12">
                     <Checkbox 
                         checked={isAllSelected}
                         onCheckedChange={toggleSelectAll}
@@ -56,6 +60,9 @@ export default function ItinerarioTable({ data, idReserva }) {
             <TableBody>
             {data.map((item) => (
                 <TableRow key={item.itinerario_id} className={selectedIds.includes(item.itinerario_id) ? "bg-slate-100/10" : ""}>
+                    <TableCell>
+                        <ItinerarioDetailsDialog item={item} />
+                    </TableCell>
                     <TableCell>
                         <Checkbox 
                             checked={selectedIds.includes(item.itinerario_id)}

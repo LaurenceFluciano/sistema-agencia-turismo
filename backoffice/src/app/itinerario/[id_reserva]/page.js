@@ -18,7 +18,7 @@ export default async function ItinerarioPage({ params, searchParams }) {
 
   return (
     <>
-    <aside className="w-1/3 border-r p-6 bg-muted/20">
+    <aside className="w-1/3 border-r p-6 bg-muted/20 h-auto overflow-auto">
         <h2 className="font-bold mb-4">Gerenciar Itinerário</h2>
 
         <ItinerarioTabs 
