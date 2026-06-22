@@ -1,3 +1,10 @@
+-- Início: 008_melhorias.down.sql
+DROP TRIGGER IF EXISTS trg_auditoria_pagamento ON "Pagamento";
+DROP TRIGGER IF EXISTS trg_auditoria_reserva ON "Reserva";
+DROP FUNCTION IF EXISTS fn_log_auditoria();
+DROP TABLE IF EXISTS "Log_Auditoria" CASCADE;
+
+
 -- Início: 007_conexao_externa.down.sql
 
 

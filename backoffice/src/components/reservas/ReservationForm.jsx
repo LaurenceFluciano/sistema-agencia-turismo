@@ -8,20 +8,32 @@ import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { Pencil, Plus } from "lucide-react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "../ui/card";
-import { DialogFooter } from "../ui/dialog";
 import { Alert } from "../ui/alert";
+import { DatePicker } from "../ui/date-picker";
 
 
 export function ReservationForm({
-        initialData, 
         onSubmit, 
         error, 
         success, 
-        onOpenItems, 
-        onUpdateItems, 
+
+        onOpenItems,
+
         reservasItems,
+        onUpdateItems,
+
+        
         clienteSelecionado,
-        setClienteSelecionado
+        setClienteSelecionado,
+
+        dataFim,
+        dataInicio,
+
+        setDataFim,
+        setDataInicio,
+
+        setOrcamento,
+        orcamento
     }) {
 
     const [termoBusca, setTermoBusca] = useState("");
@@ -47,15 +59,10 @@ export function ReservationForm({
         return () => clearTimeout(handler);
     }, [termoBusca])
 
-
-    const handleItemChange = (id, field, value) => {
-        const newItems = reservasItems.map(item => 
-            item.id_fornecedor_servico === id 
-                ? { ...item, [field]: value } 
-                : item
-        );
-        onUpdateItems(newItems); 
-    };
+    const handleRemoverItem = (id) => {
+        const novosItens = reservasItems.filter(i => i.id_fornecedor_servico !== id);
+        onUpdateItems(novosItens);
+    }
 
     return (
         <form onSubmit={onSubmit}>
@@ -78,25 +85,28 @@ export function ReservationForm({
 
                 <Field>
                     <Label htmlFor="orcamento">Orçamento:</Label>
-                    <Input name="orcamento" value={initialData?.orcamento} placeholder={"Orçamento"} />
+                    <Input 
+                        name="orcamento" 
+                        value={orcamento} 
+                        placeholder={"Orçamento"} 
+                        onChange={(e) => setOrcamento(e.target.value)}
+                    />
                 </Field>
 
                 <Field>
                     <Label htmlFor="inicio_viagem">Inicio Viagem:</Label>
-                    <Input 
-                        name="inicio_viagem" 
-                        value={initialData?.data_inicio_viagem_utc} 
-                        type="date" 
+                    <DatePicker 
+                        date={dataInicio}
+                        setDate={setDataInicio}
                     />
                 </Field>
 
 
                 <Field>
                     <Label htmlFor="fim_viagem">Fim Viagem:</Label>
-                    <Input 
-                        name="fim_viagem" 
-                        value={initialData?.data_fim_viagem_utc} 
-                        type="date" 
+                    <DatePicker 
+                        date={dataFim}
+                        setDate={setDataFim}
                     />
                 </Field>
             </FieldGroup>
@@ -118,14 +128,14 @@ export function ReservationForm({
                         </div>
                         <div className="min-h-[100px] px-6 py-8 gap-6 border-2 border-dashed rounded-lg grid grid-cols-3 text-muted-foreground">
                             {reservasItems.length === 0 ? (<p className="text-sm italic">Nenhum item adicionado...</p>) :
-                                ( reservasItems.map((reservaItem) => (
-                                    <Card 
+                                ( reservasItems.map((reservaItem) => {
+                                    return(<Card 
                                         key={reservaItem.id_fornecedor_servico} 
                                         className={`group cursor-pointer transition-all duration-200`}
                                     >
                                         <CardHeader className="flex flex-row justify-between items-center px-4 border-b border-border bg-muted/20">
                                             <CardTitle className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
-                                                {reservaItem.nomeOferta}
+                                                {reservaItem.nomeoferta}
                                             </CardTitle>
                                         </CardHeader>
                                         <CardContent className="space-y-1">
@@ -145,65 +155,20 @@ export function ReservationForm({
 
                                             <hr />
 
-                                            <div className="flex flex-col gap-4 mt-8">
-                                               <Input
-                                                    type="number"
-                                                    placeholder="Custo fornecedor"
-                                                    className="h-8"
-                                                    value={reservaItem.custo_fornecedor || ""}
-                                                    onChange={(e) => handleItemChange(reservaItem.id_fornecedor_servico, 'custo_fornecedor', e.target.value)}
-                                                />
-
-                                                <Input
-                                                    type="number"
-                                                    placeholder="Preço venda"
-                                                    className="h-8"
-                                                    value={reservaItem.preco_venda || ""}
-                                                    onChange={(e) => handleItemChange(reservaItem.id_fornecedor_servico, 'preco_venda', e.target.value)}
-                                                />
-                                            </div>
                                         </CardContent>
                                         <CardFooter className="mt-auto">
-                                            <Button variant="destructive" className="ml-auto text-xs px-4">
+                                            <Button 
+                                                variant="destructive" 
+                                                className="ml-auto text-xs px-4"
+                                                onClick={() => {handleRemoverItem(reservaItem.id_fornecedor_servico)}}
+                                            >
                                                 Remover
                                             </Button>
                                         </CardFooter>
-                                    </Card>
-                                ))
+                                    </Card>)
+                                })
                             )}
                             
-                        </div>
-                    </section>
-
-                    <section className="border-t pt-4">
-                        <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-lg font-semibold">Passageiros</h3>
-                            <Button 
-                                type="button" 
-                                variant="outline" 
-                                size="sm"
-                            >
-                                <Plus className="mr-2 h-4 w-4" /> Adicionar
-                            </Button>
-                        </div>
-                        <div className="min-h-[100px] border-2 border-dashed rounded-lg flex items-center justify-center text-muted-foreground">
-                            <p className="text-sm italic">Nenhum passageiro adicionado...</p>
-                        </div>
-                    </section>
-
-                    <section className="border-t pt-4">
-                        <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-lg font-semibold">Pacote</h3>
-                            <Button 
-                                type="button" 
-                                variant="outline" 
-                                size="sm"
-                            >
-                                <Plus className="mr-2 h-4 w-4" /> Adicionar
-                            </Button>
-                        </div>
-                        <div className="min-h-[100px] border-2 border-dashed rounded-lg flex items-center justify-center text-muted-foreground">
-                            <p className="text-sm italic">Nenhum pacote selecionado...</p>
                         </div>
                     </section>
 
