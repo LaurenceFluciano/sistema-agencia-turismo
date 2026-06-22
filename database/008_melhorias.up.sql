@@ -60,7 +60,6 @@ CREATE INDEX "idx_log_auditoria_tabela" ON "Log_Auditoria" ("nome_tabela");
 CREATE INDEX "idx_log_auditoria_data" ON "Log_Auditoria" ("data_hora");
 CREATE INDEX "idx_log_auditoria_dados_novos" ON "Log_Auditoria" USING gin ("dados_novos");
 
-
 CREATE OR REPLACE FUNCTION fn_log_auditoria()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -68,10 +67,16 @@ BEGIN
         INSERT INTO "Log_Auditoria" ("nome_tabela", "operacao", "dados_antigos")
         VALUES (TG_TABLE_NAME, 'DELETE', to_jsonb(OLD));
         RETURN OLD;
+        
     ELSIF (TG_OP = 'UPDATE') THEN
+        IF (to_jsonb(OLD) = to_jsonb(NEW)) THEN
+            RETURN NEW;
+        END IF;
+
         INSERT INTO "Log_Auditoria" ("nome_tabela", "operacao", "dados_antigos", "dados_novos")
         VALUES (TG_TABLE_NAME, 'UPDATE', to_jsonb(OLD), to_jsonb(NEW));
         RETURN NEW;
+        
     ELSIF (TG_OP = 'INSERT') THEN
         INSERT INTO "Log_Auditoria" ("nome_tabela", "operacao", "dados_novos")
         VALUES (TG_TABLE_NAME, 'INSERT', to_jsonb(NEW));
@@ -82,6 +87,12 @@ END;
 $$ LANGUAGE plpgsql;
 
 
+
 CREATE TRIGGER trg_auditoria_reserva
 AFTER INSERT OR UPDATE OR DELETE ON "Reserva"
+FOR EACH ROW EXECUTE FUNCTION fn_log_auditoria();
+
+
+CREATE TRIGGER trg_auditoria_pagamento
+AFTER INSERT OR UPDATE OR DELETE ON "Pagamento"
 FOR EACH ROW EXECUTE FUNCTION fn_log_auditoria();

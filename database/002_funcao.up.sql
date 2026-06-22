@@ -88,7 +88,6 @@ END;
 $$ LANGUAGE plpgsql;
 
 
-
 CREATE OR REPLACE FUNCTION fn_copiar_itens_pacote_para_reserva()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -98,7 +97,13 @@ BEGIN
 
         IF NOT FOUND THEN
             RAISE EXCEPTION 'Pacote (ID %) não existe. A reserva não será criada.', NEW."id_pacote"; 
-        END IF; 
+        END IF;
+
+        IF OLD."id_pacote" IS NOT NULL THEN
+            DELETE FROM "Reserva_Item" 
+            WHERE "id_reserva" = NEW."id" 
+            AND "gerado_pelo_pacote" = TRUE;
+        END IF;
 
         INSERT INTO "Reserva_Item" (
             "id_reserva",

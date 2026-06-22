@@ -21,7 +21,7 @@ export default function ReservationItemDialog({ reservaId, open, onOpenChange })
         setItems([])
 
         if (open && reservaId) {
-            listReservationItemsByReservationId(reservaId).then(setItems);
+            listReservationItemsByReservationId(reservaId, true).then(setItems);
         }
     }, [open, reservaId]);
 

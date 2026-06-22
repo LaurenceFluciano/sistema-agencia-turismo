@@ -129,8 +129,6 @@ export function ReservationForm({
                         <div className="min-h-[100px] px-6 py-8 gap-6 border-2 border-dashed rounded-lg grid grid-cols-3 text-muted-foreground">
                             {reservasItems.length === 0 ? (<p className="text-sm italic">Nenhum item adicionado...</p>) :
                                 ( reservasItems.map((reservaItem) => {
-                                    console.log(reservaItem)
-
                                     return(<Card 
                                         key={reservaItem.id_fornecedor_servico} 
                                         className={`group cursor-pointer transition-all duration-200`}

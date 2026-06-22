@@ -121,7 +121,7 @@ async function updateReservation(payload, items) {
 }
 
 
-async function listReservationItemsByReservationId(id) {
+async function listReservationItemsByReservationId(id, pegarGeradoPeloPacote=false) {
     // Aqui mantem o id pq estou listando apenas
     const reservationItems = await sql`
         SELECT 
@@ -139,6 +139,10 @@ async function listReservationItemsByReservationId(id) {
         JOIN "Municipio" m ON s."id_municipio" = m."id"
         JOIN "Estado" e ON m."id_estado" = e."id"
         WHERE "id_reserva" = ${id}
+        AND (
+            ${pegarGeradoPeloPacote} = TRUE 
+            OR ri."gerado_pelo_pacote" = FALSE
+        )
     `
 
     return reservationItems

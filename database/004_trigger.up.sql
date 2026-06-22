@@ -16,10 +16,9 @@ FOR EACH ROW
 EXECUTE FUNCTION fn_validar_papel_pessoa();
 
 
-CREATE OR REPLACE TRIGGER tg_copiar_itens_pacote_reserva
-AFTER INSERT ON "Reserva"
+CREATE TRIGGER tg_copiar_itens_pacote_reserva
+AFTER INSERT OR UPDATE OF "id_pacote" ON "Reserva"
 FOR EACH ROW
-WHEN (NEW."id_pacote" IS NOT NULL)
 EXECUTE FUNCTION fn_copiar_itens_pacote_para_reserva();
 
 

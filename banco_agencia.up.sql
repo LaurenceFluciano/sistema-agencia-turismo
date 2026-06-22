@@ -356,7 +356,6 @@ END;
 $$ LANGUAGE plpgsql;
 
 
-
 CREATE OR REPLACE FUNCTION fn_copiar_itens_pacote_para_reserva()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -366,7 +365,13 @@ BEGIN
 
         IF NOT FOUND THEN
             RAISE EXCEPTION 'Pacote (ID %) não existe. A reserva não será criada.', NEW."id_pacote"; 
-        END IF; 
+        END IF;
+
+        IF OLD."id_pacote" IS NOT NULL THEN
+            DELETE FROM "Reserva_Item" 
+            WHERE "id_reserva" = NEW."id" 
+            AND "gerado_pelo_pacote" = TRUE;
+        END IF;
 
         INSERT INTO "Reserva_Item" (
             "id_reserva",
@@ -578,10 +583,9 @@ FOR EACH ROW
 EXECUTE FUNCTION fn_validar_papel_pessoa();
 
 
-CREATE OR REPLACE TRIGGER tg_copiar_itens_pacote_reserva
-AFTER INSERT ON "Reserva"
+CREATE TRIGGER tg_copiar_itens_pacote_reserva
+AFTER INSERT OR UPDATE OF "id_pacote" ON "Reserva"
 FOR EACH ROW
-WHEN (NEW."id_pacote" IS NOT NULL)
 EXECUTE FUNCTION fn_copiar_itens_pacote_para_reserva();
 
 
@@ -1029,7 +1033,6 @@ CREATE INDEX "idx_log_auditoria_tabela" ON "Log_Auditoria" ("nome_tabela");
 CREATE INDEX "idx_log_auditoria_data" ON "Log_Auditoria" ("data_hora");
 CREATE INDEX "idx_log_auditoria_dados_novos" ON "Log_Auditoria" USING gin ("dados_novos");
 
-
 CREATE OR REPLACE FUNCTION fn_log_auditoria()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -1037,10 +1040,16 @@ BEGIN
         INSERT INTO "Log_Auditoria" ("nome_tabela", "operacao", "dados_antigos")
         VALUES (TG_TABLE_NAME, 'DELETE', to_jsonb(OLD));
         RETURN OLD;
+        
     ELSIF (TG_OP = 'UPDATE') THEN
+        IF (to_jsonb(OLD) = to_jsonb(NEW)) THEN
+            RETURN NEW;
+        END IF;
+
         INSERT INTO "Log_Auditoria" ("nome_tabela", "operacao", "dados_antigos", "dados_novos")
         VALUES (TG_TABLE_NAME, 'UPDATE', to_jsonb(OLD), to_jsonb(NEW));
         RETURN NEW;
+        
     ELSIF (TG_OP = 'INSERT') THEN
         INSERT INTO "Log_Auditoria" ("nome_tabela", "operacao", "dados_novos")
         VALUES (TG_TABLE_NAME, 'INSERT', to_jsonb(NEW));
@@ -1051,6 +1060,13 @@ END;
 $$ LANGUAGE plpgsql;
 
 
+
 CREATE TRIGGER trg_auditoria_reserva
 AFTER INSERT OR UPDATE OR DELETE ON "Reserva"
 FOR EACH ROW EXECUTE FUNCTION fn_log_auditoria();
+
+
+CREATE TRIGGER trg_auditoria_pagamento
+AFTER INSERT OR UPDATE OR DELETE ON "Pagamento"
+FOR EACH ROW EXECUTE FUNCTION fn_log_auditoria();
+
