@@ -29,3 +29,8 @@ DROP PROCEDURE IF EXISTS pd_adicionar_fornecedor_existente;
 -- CLIENTE
 DROP PROCEDURE IF EXISTS pd_cadastrar_cliente;
 DROP PROCEDURE IF EXISTS pd_atualizar_cliente;
+
+
+
+
+DROP PROCEDURE IF EXISTS pd_rotina_mudar_pagamentos_cancelados_para_vencidos;

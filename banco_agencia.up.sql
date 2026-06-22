@@ -12,9 +12,7 @@ CREATE TYPE tipo_status_reserva AS ENUM (
   'RASCUNHO', 
   'CONFIRMADA', 
   'CANCELADA', 
-  'PENDENTE', -- significado semantico de pendente é quando esperamos os vouchers serem efetuados
-  'CONCLUIDA',
-  'EM_ATRASO'
+  'CONCLUIDA'
 );
 CREATE TYPE tipo_status_pagamento AS ENUM (
   'PAGO', 
@@ -29,9 +27,7 @@ CREATE TYPE tipo_status_fornecedor_servico AS ENUM (
 CREATE TYPE tipo_status_itinerario AS ENUM (
   'RASCUNHO',
   'AGENDADO',
-  'EM_ANDAMENTO',
   'CONCLUIDO',
-  'SUSPENSO',
   'CANCELADO'
 );
 CREATE TYPE tipo_status_servico AS ENUM (
@@ -222,13 +218,6 @@ CREATE TABLE "Itinerario" (
   CONSTRAINT "pk_itinerario" PRIMARY KEY ("id")
 );
 
-CREATE TABLE "Passageiro" (
-  "id_reserva" INT,
-  "id_pessoa" INT,
-  "documento_viagem" TEXT,
-  CONSTRAINT "pk_passageiro" PRIMARY KEY ("id_reserva", "id_pessoa")
-);
-
 CREATE INDEX ON "Itinerario" ("id_reserva", "id_fornecedor_servico");
 
 /*
@@ -254,14 +243,9 @@ ALTER TABLE "Reserva_Item" ADD FOREIGN KEY ("id_reserva") REFERENCES "Reserva" (
 ALTER TABLE "Reserva_Item" ADD FOREIGN KEY ("id_fornecedor_servico") REFERENCES "Fornecedor_Servico" ("id");
 
 
-ALTER TABLE "Passageiro" ADD FOREIGN KEY ("id_pessoa") REFERENCES "Pessoa" ("id");
-ALTER TABLE "Passageiro" ADD FOREIGN KEY ("id_reserva") REFERENCES "Reserva" ("id");
 ALTER TABLE "Itinerario" ADD FOREIGN KEY ("id_municipio") REFERENCES "Municipio" ("id");
 
 ALTER TABLE "Itinerario" ADD FOREIGN KEY ("id_reserva", "id_fornecedor_servico") REFERENCES "Reserva_Item" ("id_reserva", "id_fornecedor_servico");
-
-ALTER TABLE "Passageiro" ADD CONSTRAINT "fk_passageiro_pessoa_fisica"
-  FOREIGN KEY ("id_pessoa") REFERENCES "Pessoa_Fisica" ("id_pessoa");
 
 
 ALTER TABLE "Reserva_Item" ADD COLUMN "gerado_pelo_pacote" BOOLEAN DEFAULT FALSE;
@@ -358,8 +342,20 @@ $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION fn_copiar_itens_pacote_para_reserva()
 RETURNS TRIGGER AS $$
+DECLARE
+    v_status tipo_status_reserva;
 BEGIN
     IF NEW."id_pacote" IS NOT NULL THEN
+
+        SELECT status INTO v_status
+        FROM "Reserva"
+        WHERE id = NEW.id;
+
+        IF v_status IS DISTINCT FROM 'RASCUNHO' THEN
+            RAISE EXCEPTION
+            'Não é permitido gerar itens de pacote fora do estado RASCUNHO (status atual: %).',
+            v_status;
+        END IF;
 
         PERFORM 1 FROM "Pacote" pa WHERE NEW."id_pacote" = pa."id";
 
@@ -395,7 +391,18 @@ $$ LANGUAGE plpgsql;
 
 CREATE OR REPLACE FUNCTION fn_remover_itens_pacote_da_reserva()
 RETURNS TRIGGER AS $$
+DECLARE
+    v_status tipo_status_reserva;
 BEGIN
+
+    SELECT status INTO v_status
+    FROM "Reserva"
+    WHERE id = NEW.id;
+
+    IF v_status IN ('CANCELADA', 'CONCLUIDA') THEN
+        RETURN NEW;
+    END IF;
+
     IF NEW."id_pacote" IS NULL 
         AND 
        OLD."id_pacote" IS NOT NULL 
@@ -426,40 +433,6 @@ BEGIN
 
     RETURN NULL;
 
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE FUNCTION
-    fn_marcar_reserva_como_concluido_ou_em_atraso()
-RETURNS TRIGGER AS $$
-BEGIN
-
-    PERFORM 1 
-    FROM "Pagamento" 
-    WHERE "status" = 'VENCIDO' 
-    AND "id_reserva" = NEW."id_reserva";
-
-
-    IF FOUND THEN
-        UPDATE "Reserva" 
-        SET "status" = 'EM_ATRASO'::tipo_status_reserva 
-        WHERE "id" = NEW."id_reserva";
-        
-    ELSE
-        PERFORM 1
-        FROM "Pagamento" 
-        WHERE "status" = 'PENDENTE' 
-        AND "id_reserva" = NEW."id_reserva";
-
-
-        IF NOT FOUND THEN
-            UPDATE "Reserva" 
-            SET "status" = 'CONCLUIDA'::tipo_status_reserva 
-            WHERE "id" = NEW."id_reserva";
-        END IF;
-    END IF;
-
-    RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -505,8 +478,11 @@ BEGIN
     INTO v_lucro_total
     FROM "Reserva_Item" ri
     JOIN "Reserva" r ON ri."id_reserva" = r."id"
+    JOIN "Itinerario" i ON ri."id_reserva" = i."id_reserva" 
+                        AND ri."id_fornecedor_servico" = i."id_fornecedor_servico"
     WHERE r."data_inicio_viagem_utc"::DATE BETWEEN data_inicio AND data_fim
-      AND r."status" NOT IN ('RASCUNHO', 'CANCELADA');
+      AND r."status" NOT IN ('RASCUNHO', 'CANCELADA')
+      AND i."status" = 'CONCLUIDO';
 
     RETURN v_lucro_total;
 END;
@@ -520,10 +496,13 @@ RETURNS DECIMAL(13,4) AS $$
 DECLARE
     v_lucro_reserva DECIMAL(13,4) := 0;
 BEGIN
-    SELECT COALESCE(SUM("preco_venda" - "custo_fornecedor"), 0)
+    SELECT COALESCE(SUM(ri."preco_venda" - ri."custo_fornecedor"), 0)
     INTO v_lucro_reserva
-    FROM "Reserva_Item"
-    WHERE "id_reserva" = p_id_reserva;
+    FROM "Reserva_Item" ri
+    JOIN "Itinerario" i ON ri."id_reserva" = i."id_reserva" 
+                        AND ri."id_fornecedor_servico" = i."id_fornecedor_servico"
+    WHERE ri."id_reserva" = p_id_reserva
+      AND i."status" = 'CONCLUIDO';
 
     RETURN v_lucro_reserva;
 END;
@@ -548,7 +527,7 @@ DECLARE
 BEGIN
     SELECT "status" INTO v_status_reserva FROM "Reserva" WHERE "id" = NEW.id_reserva;
 
-    IF v_status_reserva IN ('PENDENTE', 'RASCUNHO', 'CANCELADA') THEN
+    IF v_status_reserva IN ('RASCUNHO', 'CANCELADA') THEN
         RAISE EXCEPTION 'Não é permitido registrar pagamentos para reservas com status %.', v_status_reserva;
     END IF;
     RETURN NEW;
@@ -556,6 +535,124 @@ END;
 $$ LANGUAGE plpgsql;
 
 
+CREATE OR REPLACE FUNCTION fn_check_insert_reserva_item()
+RETURNS TRIGGER AS $$
+DECLARE
+    v_status tipo_status_reserva;
+BEGIN
+
+    SELECT status INTO v_status
+    FROM "Reserva"
+    WHERE id = NEW.id_reserva;
+
+    IF v_status IS DISTINCT FROM 'RASCUNHO' THEN
+        RAISE EXCEPTION
+        'Não é permitido inserir Reserva_Item quando a reserva não está em RASCUNHO (status atual: %).',
+        v_status;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION fn_check_insert_itinerario()
+RETURNS TRIGGER AS $$
+DECLARE
+    v_status tipo_status_reserva;
+BEGIN
+
+    SELECT status INTO v_status
+    FROM "Reserva"
+    WHERE id = NEW.id_reserva;
+
+    IF v_status IS DISTINCT FROM 'RASCUNHO' THEN
+        RAISE EXCEPTION
+        'Não é permitido inserir Itinerário quando a reserva não está em RASCUNHO (status atual: %).',
+        v_status;
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION fn_reserva_confirmada()
+RETURNS TRIGGER AS $$
+BEGIN
+
+    IF NEW.status = 'CONFIRMADA' AND OLD.status IS DISTINCT FROM 'CONFIRMADA' THEN
+
+        UPDATE "Itinerario"
+        SET status = 'AGENDADO'
+        WHERE id_reserva = NEW.id
+          AND status IS DISTINCT FROM 'CANCELADO';
+
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION fn_reserva_cancelada()
+RETURNS TRIGGER AS $$
+BEGIN
+
+    IF NEW.status = 'CANCELADA' AND OLD.status IS DISTINCT FROM 'CANCELADA' THEN
+
+        DELETE FROM "Reserva_Item"
+        WHERE id_reserva = NEW.id;
+
+        DELETE FROM "Itinerario"
+        WHERE id_reserva = NEW.id;
+
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION fn_reserva_concluida()
+RETURNS TRIGGER AS $$
+BEGIN
+
+    IF NEW.status = 'CONCLUIDA' AND OLD.status IS DISTINCT FROM 'CONCLUIDA' THEN
+
+        UPDATE "Itinerario"
+        SET status = 'CONCLUIDO'
+        WHERE id_reserva = NEW.id
+          AND status = 'AGENDADO';
+
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION fn_check_update_itinerario()
+RETURNS TRIGGER AS $$
+DECLARE
+    v_status tipo_status_reserva;
+BEGIN
+
+    SELECT status INTO v_status
+    FROM "Reserva"
+    WHERE id = NEW.id_reserva;
+
+    IF v_status = 'CONFIRMADA' THEN
+
+        IF NEW.status NOT IN ('AGENDADO', 'CANCELADO', 'CONCLUIDO') THEN
+            RAISE EXCEPTION
+            'Status inválido para itinerário em reserva CONFIRMADA.';
+        END IF;
+
+    END IF;
+
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 -- Início: 003_constraint.up.sql
 ALTER TABLE "Itinerario" 
     ADD CONSTRAINT "chk_data_hora" 
@@ -602,11 +699,6 @@ FOR EACH ROW
 EXECUTE FUNCTION fn_atualizar_total_reserva();
 
 
-CREATE OR REPLACE TRIGGER tg_marcar_reserva_como_concluido_ou_em_atraso
-AFTER UPDATE OR INSERT ON "Pagamento"
-FOR EACH ROW
-EXECUTE FUNCTION fn_marcar_reserva_como_concluido_ou_em_atraso();
-
 CREATE TRIGGER trg_check_pessoa_fisica
 BEFORE INSERT OR UPDATE ON "Pessoa_Fisica"
 FOR EACH ROW EXECUTE FUNCTION check_pessoa_fisica_tipo();
@@ -624,6 +716,45 @@ FOR EACH ROW EXECUTE FUNCTION fn_validar_pagamento_pago();
 CREATE TRIGGER trg_validar_status_reserva
 BEFORE INSERT ON "Pagamento"
 FOR EACH ROW EXECUTE FUNCTION fn_validar_status_reserva_pagamento();
+
+
+CREATE TRIGGER trg_check_insert_reserva_item
+BEFORE INSERT ON "Reserva_Item"
+FOR EACH ROW
+EXECUTE FUNCTION fn_check_insert_reserva_item();
+
+
+CREATE TRIGGER trg_check_insert_itinerario
+BEFORE INSERT ON "Itinerario"
+FOR EACH ROW
+EXECUTE FUNCTION fn_check_insert_itinerario();
+
+
+CREATE TRIGGER trg_reserva_confirmada
+AFTER UPDATE OF status ON "Reserva"
+FOR EACH ROW
+WHEN (NEW.status = 'CONFIRMADA')
+EXECUTE FUNCTION fn_reserva_confirmada();
+
+
+CREATE TRIGGER trg_reserva_cancelada
+AFTER UPDATE OF status ON "Reserva"
+FOR EACH ROW
+WHEN (NEW.status = 'CANCELADA')
+EXECUTE FUNCTION fn_reserva_cancelada();
+
+
+CREATE TRIGGER trg_reserva_concluida
+AFTER UPDATE OF status ON "Reserva"
+FOR EACH ROW
+WHEN (NEW.status = 'CONCLUIDA')
+EXECUTE FUNCTION fn_reserva_concluida();
+
+
+CREATE TRIGGER trg_check_update_itinerario
+BEFORE UPDATE OF status ON "Itinerario"
+FOR EACH ROW
+EXECUTE FUNCTION fn_check_update_itinerario();
 -- Início: 005_view.up.sql
 CREATE OR REPLACE VIEW vw_fornecedor_servico_completo AS
 SELECT 
@@ -718,45 +849,12 @@ END;
 $$;
 
 
-CREATE OR REPLACE PROCEDURE
-    pd_adicionar_passageiro_na_viagem(
-        pd_nome VARCHAR(255),
-        pd_id_reserva INT
-    )
-LANGUAGE plpgsql AS $$
-DECLARE
-    v_id_pessoa INT;
-BEGIN
-    INSERT INTO "Pessoa" ("nome","tipo") 
-    VALUES (pd_nome, 'F')
-    RETURNING "id" INTO v_id_pessoa;
-
-    INSERT INTO "Pessoa_Fisica" ("id_pessoa") 
-    VALUES (v_id_pessoa);
-
-    INSERT INTO "Passageiro" (
-        "id_reserva",
-        "id_pessoa"
-    ) VALUES (
-        pd_id_reserva,
-        v_id_pessoa
-    );
-END;
-$$;
 
 
-CREATE OR REPLACE PROCEDURE pd_rotina_cancelar_pagamentos_vencidos()
+CREATE OR REPLACE PROCEDURE pd_rotina_mudar_pagamentos_cancelados_para_vencidos()
 LANGUAGE plpgsql
 AS $$
 BEGIN
-    UPDATE "Reserva"
-    SET "status" = 'CANCELADA'::tipo_status_reserva
-    WHERE "id" IN (
-        SELECT "id_reserva" 
-        FROM "Pagamento" 
-        WHERE "status" = 'PENDENTE'::tipo_status_pagamento 
-          AND "data_pagamento_utc" < NOW()
-    );
     
     UPDATE "Pagamento"
     SET "status" = 'VENCIDO'::tipo_status_pagamento
@@ -764,7 +862,7 @@ BEGIN
       AND "data_pagamento_utc" < NOW();
 
 
-    RAISE NOTICE 'Rotina concluída: Pagamentos atrasados e suas respectivas reservas foram devidamente cancelados.';
+    RAISE NOTICE 'Rotina concluída: Pagamentos atrasados devidamente cancelados.';
 END;
 $$;
 
@@ -1072,3 +1170,10 @@ CREATE TRIGGER trg_auditoria_pagamento
 AFTER INSERT OR UPDATE OR DELETE ON "Pagamento"
 FOR EACH ROW EXECUTE FUNCTION fn_log_auditoria();
 
+
+ALTER TABLE "Itinerario" 
+DROP CONSTRAINT "Itinerario_id_reserva_id_fornecedor_servico_fkey",
+ADD CONSTRAINT "Itinerario_id_reserva_id_fornecedor_servico_fkey"
+    FOREIGN KEY ("id_reserva", "id_fornecedor_servico") 
+    REFERENCES "Reserva_Item" ("id_reserva", "id_fornecedor_servico")
+    ON DELETE CASCADE;

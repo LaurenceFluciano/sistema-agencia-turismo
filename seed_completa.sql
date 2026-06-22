@@ -348,23 +348,6 @@ CALL pd_definir_preco_da_reserva(3,9,3600,15);
 CALL pd_definir_preco_da_reserva(3,29,1600,15);
 CALL pd_definir_preco_da_reserva(3,44,640,15);
 
-CALL pd_adicionar_passageiro_na_viagem('Maria Hofman', 1);
-CALL pd_adicionar_passageiro_na_viagem('Paulo Ricardo', 1);
-
-CALL pd_adicionar_passageiro_na_viagem('Jorge', 2);
-CALL pd_adicionar_passageiro_na_viagem('Joao', 2);
-CALL pd_adicionar_passageiro_na_viagem('Luis', 2);
-CALL pd_adicionar_passageiro_na_viagem('Antonio', 2);
-
-CALL pd_adicionar_passageiro_na_viagem('Lucas Martins', 3);
-CALL pd_adicionar_passageiro_na_viagem('Beatriz Souza', 3);
-CALL pd_adicionar_passageiro_na_viagem('Carlos Eduardo', 3);
-CALL pd_adicionar_passageiro_na_viagem('Fernanda Lima', 3);
-CALL pd_adicionar_passageiro_na_viagem('Rafael Almeida', 3);
-CALL pd_adicionar_passageiro_na_viagem('Camila Rocha', 3);
-CALL pd_adicionar_passageiro_na_viagem('Zelda do Santos', 3);
-CALL pd_adicionar_passageiro_na_viagem('Juliana Costa', 3);
-
 
 
 -- Início da Seed: 007_itinerario.sql

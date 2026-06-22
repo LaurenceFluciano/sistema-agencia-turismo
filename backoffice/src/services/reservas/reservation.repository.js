@@ -83,7 +83,8 @@ export async function updateReservation(payload, items) {
                     "id_cliente" = ${payload.id_cliente},
                     "data_inicio_viagem_utc" = ${payload.data_inicio_viagem_utc},
                     "data_fim_viagem_utc" = ${payload.data_fim_viagem_utc},
-                    "orcamento" = ${payload.orcamento}
+                    "orcamento" = ${payload.orcamento},
+                    "status" = ${payload.status}
                 WHERE "id" = ${payload.id_reserva};
             `;
 

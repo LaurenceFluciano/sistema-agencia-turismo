@@ -29,45 +29,12 @@ END;
 $$;
 
 
-CREATE OR REPLACE PROCEDURE
-    pd_adicionar_passageiro_na_viagem(
-        pd_nome VARCHAR(255),
-        pd_id_reserva INT
-    )
-LANGUAGE plpgsql AS $$
-DECLARE
-    v_id_pessoa INT;
-BEGIN
-    INSERT INTO "Pessoa" ("nome","tipo") 
-    VALUES (pd_nome, 'F')
-    RETURNING "id" INTO v_id_pessoa;
-
-    INSERT INTO "Pessoa_Fisica" ("id_pessoa") 
-    VALUES (v_id_pessoa);
-
-    INSERT INTO "Passageiro" (
-        "id_reserva",
-        "id_pessoa"
-    ) VALUES (
-        pd_id_reserva,
-        v_id_pessoa
-    );
-END;
-$$;
 
 
-CREATE OR REPLACE PROCEDURE pd_rotina_cancelar_pagamentos_vencidos()
+CREATE OR REPLACE PROCEDURE pd_rotina_mudar_pagamentos_cancelados_para_vencidos()
 LANGUAGE plpgsql
 AS $$
 BEGIN
-    UPDATE "Reserva"
-    SET "status" = 'CANCELADA'::tipo_status_reserva
-    WHERE "id" IN (
-        SELECT "id_reserva" 
-        FROM "Pagamento" 
-        WHERE "status" = 'PENDENTE'::tipo_status_pagamento 
-          AND "data_pagamento_utc" < NOW()
-    );
     
     UPDATE "Pagamento"
     SET "status" = 'VENCIDO'::tipo_status_pagamento
@@ -75,7 +42,7 @@ BEGIN
       AND "data_pagamento_utc" < NOW();
 
 
-    RAISE NOTICE 'Rotina concluída: Pagamentos atrasados e suas respectivas reservas foram devidamente cancelados.';
+    RAISE NOTICE 'Rotina concluída: Pagamentos atrasados devidamente cancelados.';
 END;
 $$;
 

@@ -35,11 +35,6 @@ FOR EACH ROW
 EXECUTE FUNCTION fn_atualizar_total_reserva();
 
 
-CREATE OR REPLACE TRIGGER tg_marcar_reserva_como_concluido_ou_em_atraso
-AFTER UPDATE OR INSERT ON "Pagamento"
-FOR EACH ROW
-EXECUTE FUNCTION fn_marcar_reserva_como_concluido_ou_em_atraso();
-
 CREATE TRIGGER trg_check_pessoa_fisica
 BEFORE INSERT OR UPDATE ON "Pessoa_Fisica"
 FOR EACH ROW EXECUTE FUNCTION check_pessoa_fisica_tipo();
@@ -57,3 +52,42 @@ FOR EACH ROW EXECUTE FUNCTION fn_validar_pagamento_pago();
 CREATE TRIGGER trg_validar_status_reserva
 BEFORE INSERT ON "Pagamento"
 FOR EACH ROW EXECUTE FUNCTION fn_validar_status_reserva_pagamento();
+
+
+CREATE TRIGGER trg_check_insert_reserva_item
+BEFORE INSERT ON "Reserva_Item"
+FOR EACH ROW
+EXECUTE FUNCTION fn_check_insert_reserva_item();
+
+
+CREATE TRIGGER trg_check_insert_itinerario
+BEFORE INSERT ON "Itinerario"
+FOR EACH ROW
+EXECUTE FUNCTION fn_check_insert_itinerario();
+
+
+CREATE TRIGGER trg_reserva_confirmada
+AFTER UPDATE OF status ON "Reserva"
+FOR EACH ROW
+WHEN (NEW.status = 'CONFIRMADA')
+EXECUTE FUNCTION fn_reserva_confirmada();
+
+
+CREATE TRIGGER trg_reserva_cancelada
+AFTER UPDATE OF status ON "Reserva"
+FOR EACH ROW
+WHEN (NEW.status = 'CANCELADA')
+EXECUTE FUNCTION fn_reserva_cancelada();
+
+
+CREATE TRIGGER trg_reserva_concluida
+AFTER UPDATE OF status ON "Reserva"
+FOR EACH ROW
+WHEN (NEW.status = 'CONCLUIDA')
+EXECUTE FUNCTION fn_reserva_concluida();
+
+
+CREATE TRIGGER trg_check_update_itinerario
+BEFORE UPDATE OF status ON "Itinerario"
+FOR EACH ROW
+EXECUTE FUNCTION fn_check_update_itinerario();

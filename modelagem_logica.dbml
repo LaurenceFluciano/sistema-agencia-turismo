@@ -149,14 +149,6 @@ Table Pagamento {
 
 // Módulo Organização
 
-Table Passageiro {
-  id_reserva int [ref: > Reserva.id]
-  id_pessoa int [ref: > Pessoa_Fisica.id_pessoa]
-  documento_viagem text
-  indexes {
-    (id_reserva, id_pessoa) [pk]
-  }
-}
 
 Table Itinerario {
   id int [pk]

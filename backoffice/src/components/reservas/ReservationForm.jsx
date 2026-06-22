@@ -10,6 +10,7 @@ import { Pencil, Plus } from "lucide-react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "../ui/card";
 import { Alert } from "../ui/alert";
 import { DatePicker } from "../ui/date-picker";
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 
 
 export function ReservationForm({
@@ -31,6 +32,11 @@ export function ReservationForm({
 
         setDataFim,
         setDataInicio,
+
+        isEditing,
+
+        status,
+        setStatus,
 
         setOrcamento,
         orcamento
@@ -109,7 +115,51 @@ export function ReservationForm({
                         setDate={setDataFim}
                     />
                 </Field>
+
+                {isEditing && <Field>
+                    <Label htmlFor="status">Status da Reserva:</Label>
+                    <Select 
+                        defaultValue={status ? status.toLowerCase() : "rascunho"} 
+                        onValueChange={(value) => {
+                            setStatus(value.toUpperCase());
+                        }}
+                    >
+                        <SelectTrigger>
+                            <SelectValue/>
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectGroup>
+                                <SelectItem
+                                    value="rascunho"
+                                >
+                                    Rascunho
+                                </SelectItem>
+
+                                <SelectItem
+                                    value="confirmada"
+                                >
+                                    Confirmada
+                                </SelectItem>
+
+                                <SelectItem
+                                    value="cancelada"
+                                >
+                                    Cancelada
+                                </SelectItem>
+
+
+                                <SelectItem
+                                    value="concluida"
+                                >
+                                    Concluida
+                                </SelectItem>
+                            </SelectGroup>
+                        </SelectContent>
+                    </Select>
+                </Field>
+                }
             </FieldGroup>
+            
 
             <div className="space-y-6 w-full">
                     

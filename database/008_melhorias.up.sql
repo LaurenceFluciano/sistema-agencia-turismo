@@ -96,3 +96,11 @@ FOR EACH ROW EXECUTE FUNCTION fn_log_auditoria();
 CREATE TRIGGER trg_auditoria_pagamento
 AFTER INSERT OR UPDATE OR DELETE ON "Pagamento"
 FOR EACH ROW EXECUTE FUNCTION fn_log_auditoria();
+
+
+ALTER TABLE "Itinerario" 
+DROP CONSTRAINT "Itinerario_id_reserva_id_fornecedor_servico_fkey",
+ADD CONSTRAINT "Itinerario_id_reserva_id_fornecedor_servico_fkey"
+    FOREIGN KEY ("id_reserva", "id_fornecedor_servico") 
+    REFERENCES "Reserva_Item" ("id_reserva", "id_fornecedor_servico")
+    ON DELETE CASCADE;

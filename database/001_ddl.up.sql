@@ -179,13 +179,6 @@ CREATE TABLE "Itinerario" (
   CONSTRAINT "pk_itinerario" PRIMARY KEY ("id")
 );
 
-CREATE TABLE "Passageiro" (
-  "id_reserva" INT,
-  "id_pessoa" INT,
-  "documento_viagem" TEXT,
-  CONSTRAINT "pk_passageiro" PRIMARY KEY ("id_reserva", "id_pessoa")
-);
-
 CREATE INDEX ON "Itinerario" ("id_reserva", "id_fornecedor_servico");
 
 /*
@@ -211,14 +204,9 @@ ALTER TABLE "Reserva_Item" ADD FOREIGN KEY ("id_reserva") REFERENCES "Reserva" (
 ALTER TABLE "Reserva_Item" ADD FOREIGN KEY ("id_fornecedor_servico") REFERENCES "Fornecedor_Servico" ("id");
 
 
-ALTER TABLE "Passageiro" ADD FOREIGN KEY ("id_pessoa") REFERENCES "Pessoa" ("id");
-ALTER TABLE "Passageiro" ADD FOREIGN KEY ("id_reserva") REFERENCES "Reserva" ("id");
 ALTER TABLE "Itinerario" ADD FOREIGN KEY ("id_municipio") REFERENCES "Municipio" ("id");
 
 ALTER TABLE "Itinerario" ADD FOREIGN KEY ("id_reserva", "id_fornecedor_servico") REFERENCES "Reserva_Item" ("id_reserva", "id_fornecedor_servico");
-
-ALTER TABLE "Passageiro" ADD CONSTRAINT "fk_passageiro_pessoa_fisica"
-  FOREIGN KEY ("id_pessoa") REFERENCES "Pessoa_Fisica" ("id_pessoa");
 
 
 ALTER TABLE "Reserva_Item" ADD COLUMN "gerado_pelo_pacote" BOOLEAN DEFAULT FALSE;

@@ -11,9 +11,7 @@ CREATE TYPE tipo_status_reserva AS ENUM (
   'RASCUNHO', 
   'CONFIRMADA', 
   'CANCELADA', 
-  'PENDENTE', -- significado semantico de pendente é quando esperamos os vouchers serem efetuados
-  'CONCLUIDA',
-  'EM_ATRASO'
+  'CONCLUIDA'
 );
 CREATE TYPE tipo_status_pagamento AS ENUM (
   'PAGO', 
@@ -28,9 +26,7 @@ CREATE TYPE tipo_status_fornecedor_servico AS ENUM (
 CREATE TYPE tipo_status_itinerario AS ENUM (
   'RASCUNHO',
   'AGENDADO',
-  'EM_ANDAMENTO',
   'CONCLUIDO',
-  'SUSPENSO',
   'CANCELADO'
 );
 CREATE TYPE tipo_status_servico AS ENUM (

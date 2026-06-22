@@ -1,17 +1,14 @@
-
 'use server'
 import sql from "../db";
 
-async function fetchItinerarios(id_reserva) {
-    const itinerarios = await sql`
-        SELECT * FROM vw_relatorio_itinerario_completo 
+async function fetchItinerarios(id_reserva, filters) {
+    return await sql`
+        SELECT * FROM vw_relatorio_itinerario_completo
         WHERE reserva_id = ${id_reserva}
+        ${filters}
         ORDER BY ordem_passo ASC
-    `
-
-    return itinerarios
+    `;
 }
-
 
 async function createItinerario(data) {
     try {

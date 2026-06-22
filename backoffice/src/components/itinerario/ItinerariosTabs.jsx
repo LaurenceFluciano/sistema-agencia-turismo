@@ -1,9 +1,14 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import ItinerarioRegisterForm from "./ItinerarioRegisterForm";
 import ItinerarioEditorForm from "./ItinerarioEditorForm";
+import ItinerarioFilter from "./ItinerarioFilter";
 
 export default function ItinerarioTabs({ reserva, children }) {
-  const isConcluido = reserva[0]?.status === 'CONCLUIDO' || reserva[0]?.status === 'CONFIRMADA';
+  const status = reserva[0]?.status;
+
+  const isConfirmed = status === 'CONFIRMADA';
+  const isFinal = ['CONCLUIDA', 'CANCELADA'].includes(status);
+
 
   return (
     <Tabs defaultValue="consultar" className="w-full">
@@ -11,12 +16,13 @@ export default function ItinerarioTabs({ reserva, children }) {
         <TabsTrigger value="filtros">Filtros</TabsTrigger>
         
 
-        <TabsTrigger value="criar" disabled={isConcluido}>Criar</TabsTrigger>
-        <TabsTrigger value="editar" disabled={isConcluido}>Editar</TabsTrigger>
+        <TabsTrigger value="criar" disabled={isConfirmed || isFinal}>Criar</TabsTrigger>
+        <TabsTrigger 
+          value="editar" disabled={isFinal}>Editar</TabsTrigger>
       </TabsList>
 
       <TabsContent value="filtros">
-        {/* Sua Tabela de consulta */}
+        <ItinerarioFilter />
       </TabsContent>
 
       <TabsContent value="criar">
@@ -28,6 +34,7 @@ export default function ItinerarioTabs({ reserva, children }) {
       <TabsContent value="editar">
         <ItinerarioEditorForm 
             reservaId={reserva[0].id}
+            isReservaConfirmada={isConfirmed}
         />
       </TabsContent>
     </Tabs>

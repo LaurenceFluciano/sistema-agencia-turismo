@@ -10,7 +10,8 @@ import { useEffect, useState } from "react";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
 
 
-export default function ItinerarioEditorForm({reservaId}) {
+
+export default function ItinerarioEditorForm({reservaId, isReservaConfirmada}) {
     const [id, setId] = useState('')
 
     const [enableInputs, setEnableInputs] = useState(false)
@@ -98,7 +99,7 @@ export default function ItinerarioEditorForm({reservaId}) {
                     roteiro: result.descricao_evento || '',
                     tipo_evento: result.tipo_evento || '',
                     ordem_passo: result.ordem_passo || '',
-                    status: result.status || 'RASCUNHO'
+                    status: result.status_itinerario || 'RASCUNHO'
                 });
                 console.log(data)
                 setEnableInputs(true)
@@ -108,13 +109,16 @@ export default function ItinerarioEditorForm({reservaId}) {
         updateData();
     }, [id, reservaId]);
 
+    
+
+
     return (
         <form onSubmit={handleSubmit}>
             <Field className="py-8">
-                <Label htmlFor="id_oferta">id_itinerario</Label>
+                <Label htmlFor="id_itinerario">id_itinerario</Label>
                 <Input 
-                    name="id"
-                    placeholder="id"
+                    name="id_itinerario"
+                    placeholder="id_itinerario"
                     required
                     value={id}
                     onChange={(e) => setId(e.target.value)}
@@ -122,7 +126,7 @@ export default function ItinerarioEditorForm({reservaId}) {
                 />
             </Field>
             { enableInputs && <FieldGroup>
-                <Field>
+                {!isReservaConfirmada && (<Field>
                     <Label htmlFor="id_oferta">id_oferta</Label>
                     <Input 
                         name="id_oferta"
@@ -131,10 +135,10 @@ export default function ItinerarioEditorForm({reservaId}) {
                         onChange={(e) => {setData((prev) => ({...prev, id_oferta: e.target.value}))}}
                         required
                     />
-                </Field>
+                </Field>)}
 
 
-                <Field>
+                {!isReservaConfirmada && <Field>
                     <Label htmlFor="id_municipio">id_municipio</Label>
                     <Input 
                         name="id_municipio"
@@ -143,10 +147,10 @@ export default function ItinerarioEditorForm({reservaId}) {
                         onChange={(e) => {setData((prev) => ({...prev, id_municipio: e.target.value}))}}
                         required
                     />
-                </Field>
+                </Field>}
 
 
-                <Field>
+                {!isReservaConfirmada && <Field>
                     <Label htmlFor="data_hora_inicio">data_hora_inicio</Label>
                     <Input 
                         type="datetime-local"
@@ -155,10 +159,10 @@ export default function ItinerarioEditorForm({reservaId}) {
                         onChange={(e) => {setData((prev) => ({...prev, data_inicio: e.target.value}))}}
                         placeholder="data_hora_inicio"
                     />
-                </Field>
+                </Field>}
 
 
-                <Field>
+                {!isReservaConfirmada && <Field>
                     <Label htmlFor="data_hora_fim">data_hora_fim</Label>
                     <Input 
                         type="datetime-local"
@@ -167,10 +171,10 @@ export default function ItinerarioEditorForm({reservaId}) {
                         onChange={(e) => {setData((prev) => ({...prev, data_fim: e.target.value}))}}
                         placeholder="data_hora_fim"
                     />
-                </Field>
+                </Field>}
 
 
-                <Field>
+                {data.status != "CONCLUIDO" && <Field>
                     <Label htmlFor="voucher_codigo">voucher_codigo</Label>
                     <Input 
                         name="voucher_codigo"
@@ -178,9 +182,9 @@ export default function ItinerarioEditorForm({reservaId}) {
                         onChange={(e) => {setData((prev) => ({...prev, voucher: e.target.value}))}}
                         placeholder="voucher_codigo"
                     />
-                </Field>
+                </Field>}
 
-                <Field>
+                {data.status != "CONCLUIDO" && <Field>
                     <Label htmlFor="tipo_evento">tipo_evento</Label>
                     <Textarea 
                         name="tipo_evento"
@@ -188,10 +192,10 @@ export default function ItinerarioEditorForm({reservaId}) {
                         onChange={(e) => {setData((prev) => ({...prev, tipo_evento: e.target.value}))}}
                         placeholder="tipo_evento"
                     />
-                </Field>
+                </Field>}
 
 
-                <Field>
+                {data.status != "CONCLUIDO" && <Field>
                     <Label htmlFor="roteiro">roteiro</Label>
                     <Textarea 
                         name="roteiro"
@@ -199,9 +203,9 @@ export default function ItinerarioEditorForm({reservaId}) {
                         onChange={(e) => {setData((prev) => ({...prev, roteiro: e.target.value}))}}
                         placeholder="roteiro"
                     />
-                </Field>
+                </Field>}
 
-                <Field>
+                {!isReservaConfirmada && <Field>
                     <Label htmlFor="ordem_passo">passo</Label>
                     <Input 
                         type="numeric"
@@ -210,10 +214,11 @@ export default function ItinerarioEditorForm({reservaId}) {
                         onChange={(e) => {setData((prev) => ({...prev, ordem_passo: e.target.value}))}}
                         placeholder="passo"
                     />
-                </Field>
+                </Field>}
 
                 <Select 
                     value={data.status} 
+                    defaultValue={data.status}
                     onValueChange={(status) => setData((prev) => ({ ...prev, status: status }))}
                 >
                     <SelectTrigger id="status">
@@ -225,9 +230,7 @@ export default function ItinerarioEditorForm({reservaId}) {
                         <SelectGroup>
                             <SelectItem value="RASCUNHO">RASCUNHO</SelectItem>
                             <SelectItem value="AGENDADO">AGENDADO</SelectItem>
-                            <SelectItem value="EM_ANDAMENTO">EM_ANDAMENTO</SelectItem>
                             <SelectItem value="CONCLUIDO">CONCLUIDO</SelectItem>
-                            <SelectItem value="SUSPENSO">SUSPENSO</SelectItem>
                             <SelectItem value="CANCELADO">CANCELADO</SelectItem>
                         </SelectGroup>
                     </SelectContent>

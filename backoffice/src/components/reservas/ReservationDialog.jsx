@@ -24,12 +24,17 @@ export default function ReservationDialog({
     const [dataFim, setDataFim] = useState(null)
     const [dataInicio, setDataInicio] = useState(null)
     const [orcamento, setOrcamento] = useState("")
+    const [status, setStatus] = useState("RASCUNHO")
 
     const [view, setView] = useState('form');
+
+    const [isEdit, setIsEdit] = useState(false)
 
 
     useEffect(() => {
         if (!reserva) return;
+
+        setIsEdit(!!reserva?.id)
 
         if (reserva.id_cliente) {
             const cliente = {
@@ -56,6 +61,8 @@ export default function ReservationDialog({
                 ? new Date(reserva.data_fim_viagem_utc)
                 : null
         );
+
+        setStatus(reserva.status || "RASCUNHO")
 
         setOrcamento(reserva.orcamento ?? "");
 
@@ -90,7 +97,7 @@ export default function ReservationDialog({
         setError(null);
         setSuccess(null);
         
-        const isEdit = !!reserva?.id;
+        
 
         const cliente = clienteSelecionado;
 
@@ -107,6 +114,7 @@ export default function ReservationDialog({
             data_inicio_viagem_utc: dataInicio ? new Date(dataInicio).toISOString() : null,
             data_fim_viagem_utc: dataFim ? new Date(dataFim).toISOString() : null,
             orcamento: formatDecimal(orcamento),
+            status: status,
             
             items: itemsParaSalvar.map(item => ({
                 id_fornecedor_servico: item.id_fornecedor_servico,
@@ -133,6 +141,8 @@ export default function ReservationDialog({
                 setOrcamento("");
                 setClienteSelecionado(null);
                 setReservasItems([])
+                setStatus("RASCUNHO")
+                setIsEdit(false)
             } else {
                 setError(response.error);
             }
@@ -177,6 +187,11 @@ export default function ReservationDialog({
 
                                 orcamento={orcamento}
                                 setOrcamento={setOrcamento}
+
+                                isEditing={isEdit}
+
+                                status={status}
+                                setStatus={setStatus}
                             />
                         </div>
                     </>

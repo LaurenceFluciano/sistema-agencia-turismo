@@ -18,7 +18,11 @@ DROP TRIGGER IF EXISTS tg_marcar_reserva_como_concluido_ou_em_atraso ON "Pagamen
 DROP TRIGGER IF EXISTS  trg_check_pessoa_fisica ON "Pessoa_Fisica";
 DROP TRIGGER IF EXISTS  trg_check_pessoa_juridica ON "Pessoa_Juridica";
 
-
 DROP TRIGGER IF EXISTS trg_validar_pagamento_pago ON "Pagamento";
-
 DROP TRIGGER IF EXISTS trg_validar_status_reserva ON "Pagamento";
+DROP TRIGGER IF EXISTS trg_check_insert_reserva_item ON "Reserva_Item";
+DROP TRIGGER IF EXISTS trg_check_insert_itinerario ON "Itinerario";
+DROP TRIGGER IF EXISTS trg_reserva_confirmada ON "Reserva";
+DROP TRIGGER IF EXISTS trg_reserva_cancelada ON "Reserva";
+DROP TRIGGER IF EXISTS trg_reserva_concluida ON "Reserva";
+DROP TRIGGER IF EXISTS trg_check_update_itinerario ON "Itinerario";

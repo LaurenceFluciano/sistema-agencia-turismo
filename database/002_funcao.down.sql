@@ -34,3 +34,22 @@ DROP FUNCTION IF EXISTS fn_validar_periodo(anyelement, anyelement) CASCADE;
 DROP FUNCTION IF EXISTS fn_validar_pagamento_pago() CASCADE;
 
 DROP FUNCTION IF EXISTS fn_validar_status_reserva_pagamento() CASCADE;
+
+
+DROP FUNCTION IF EXISTS fn_check_insert_reserva_item() CASCADE;
+
+
+DROP FUNCTION IF EXISTS fn_check_insert_itinerario() CASCADE;
+
+
+DROP FUNCTION IF EXISTS fn_reserva_confirmada() CASCADE;
+
+
+
+DROP FUNCTION IF EXISTS fn_reserva_cancelada() CASCADE;
+
+
+DROP FUNCTION IF EXISTS fn_reserva_concluida() CASCADE;
+
+
+DROP FUNCTION IF EXISTS fn_check_update_itinerario() CASCADE;

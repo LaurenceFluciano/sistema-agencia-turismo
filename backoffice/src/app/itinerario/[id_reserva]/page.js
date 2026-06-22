@@ -1,16 +1,20 @@
 import ItinerarioTable from "@/components/itinerario/ItinarioTable";
 import ItinerarioTabs from "@/components/itinerario/ItinerariosTabs";
+import { buildItinerarioFilters } from "@/services/itinerarios/itinerarios.filter";
 import { fetchItinerarios } from "@/services/itinerarios/itinerarios.repository";
 import { getReservationById } from "@/services/reservas/reservation.repository";
 
 
-export default async function ItinerarioPage({ params }) {
+export default async function ItinerarioPage({ params, searchParams }) {
   const { id_reserva } = await params;
+  const resolvedSearchParams = await searchParams;
+
+
+  const filters = buildItinerarioFilters(resolvedSearchParams || {});
   
-  const itinerarios = await fetchItinerarios(id_reserva);
+  const itinerarios = await fetchItinerarios(id_reserva, filters);
   const reserva = await getReservationById(id_reserva)
 
-  console.log(reserva)
 
   return (
     <>

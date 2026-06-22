@@ -42,6 +42,11 @@ DROP PROCEDURE IF EXISTS pd_adicionar_fornecedor_existente;
 DROP PROCEDURE IF EXISTS pd_cadastrar_cliente;
 DROP PROCEDURE IF EXISTS pd_atualizar_cliente;
 
+
+
+
+DROP PROCEDURE IF EXISTS pd_rotina_mudar_pagamentos_cancelados_para_vencidos;
+
 -- Início: 005_view.down.sql
 DROP VIEW IF EXISTS vw_fornecedor_servico_completo CASCADE;
 
@@ -70,10 +75,15 @@ DROP TRIGGER IF EXISTS tg_marcar_reserva_como_concluido_ou_em_atraso ON "Pagamen
 DROP TRIGGER IF EXISTS  trg_check_pessoa_fisica ON "Pessoa_Fisica";
 DROP TRIGGER IF EXISTS  trg_check_pessoa_juridica ON "Pessoa_Juridica";
 
-
 DROP TRIGGER IF EXISTS trg_validar_pagamento_pago ON "Pagamento";
-
 DROP TRIGGER IF EXISTS trg_validar_status_reserva ON "Pagamento";
+DROP TRIGGER IF EXISTS trg_check_insert_reserva_item ON "Reserva_Item";
+DROP TRIGGER IF EXISTS trg_check_insert_itinerario ON "Itinerario";
+DROP TRIGGER IF EXISTS trg_reserva_confirmada ON "Reserva";
+DROP TRIGGER IF EXISTS trg_reserva_cancelada ON "Reserva";
+DROP TRIGGER IF EXISTS trg_reserva_concluida ON "Reserva";
+DROP TRIGGER IF EXISTS trg_check_update_itinerario ON "Itinerario";
+
 -- Início: 003_constraint.down.sql
 
 
@@ -114,6 +124,26 @@ DROP FUNCTION IF EXISTS fn_validar_periodo(anyelement, anyelement) CASCADE;
 DROP FUNCTION IF EXISTS fn_validar_pagamento_pago() CASCADE;
 
 DROP FUNCTION IF EXISTS fn_validar_status_reserva_pagamento() CASCADE;
+
+
+DROP FUNCTION IF EXISTS fn_check_insert_reserva_item() CASCADE;
+
+
+DROP FUNCTION IF EXISTS fn_check_insert_itinerario() CASCADE;
+
+
+DROP FUNCTION IF EXISTS fn_reserva_confirmada() CASCADE;
+
+
+
+DROP FUNCTION IF EXISTS fn_reserva_cancelada() CASCADE;
+
+
+DROP FUNCTION IF EXISTS fn_reserva_concluida() CASCADE;
+
+
+DROP FUNCTION IF EXISTS fn_check_update_itinerario() CASCADE;
+
 -- Início: 001_ddl.down.sql
 DROP TABLE IF EXISTS "Passageiro" CASCADE;
 DROP TABLE IF EXISTS "Itinerario" CASCADE;

@@ -46,11 +46,6 @@ export default function ReservationFiltersAction(){
                                 Cancelada
                             </SelectItem>
 
-                            <SelectItem
-                                value="pendente"
-                            >
-                                Pendente
-                            </SelectItem>
 
                             <SelectItem
                                 value="concluida"
@@ -58,12 +53,7 @@ export default function ReservationFiltersAction(){
                                 Concluida
                             </SelectItem>
 
-                            <SelectItem
-                                value="em_atraso"
-                            >
-                                Em Atraso
-                            </SelectItem>
-                            
+
                         </SelectGroup>
                     </SelectContent>
                 </Select>
