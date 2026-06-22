@@ -6,10 +6,9 @@ Table Pessoa {
   email varchar(320)
   data_cadastro timestamp [default: `now()`]
   status varchar [default: 'ATIVO']
-  tipo_pessoa char(1) [not null] // 'F' ou 'J'
   
   indexes {
-    (id, tipo_pessoa) [unique]
+    (id) [unique]
   }
 }
 
@@ -30,10 +29,9 @@ Table Pessoa_Fisica {
   id_pessoa int [pk]
   cpf char(11)
   data_nascimento date
-  tipo_pessoa char(1) [default: 'F', not null]
 
   Indexes {
-    (id_pessoa, tipo_pessoa) [unique]
+    (id_pessoa) [unique]
   }
 }
 
@@ -41,10 +39,9 @@ Table Pessoa_Juridica {
   id_pessoa int [pk]
   razao_social varchar(255)
   cnpj char(14)
-  tipo_pessoa char(1) [default: 'J', not null]
 
   Indexes {
-    (id_pessoa, tipo_pessoa) [unique]
+    (id_pessoa) [unique]
   }
 }
 
@@ -81,16 +78,16 @@ Table Municipio {
 // Serviços
 Table Tipo_Servico {
   id int [pk]
-  nome_tipo varchar(255)
+  nome_tipo varchar(255) [not null]
 }
 
 Table Servico {
   id int [pk]
-  nome_oficial varchar(255)
-  id_municipio int [ref: > Municipio.id]
+  nome_oficial varchar(255) [not null]
+  id_municipio int [ref: > Municipio.id, not null]
   data_atualizacao timestamp [default: `now()`]
   status varchar [default: 'EM_ANALISE']
-  id_tipo int [ref: > Tipo_Servico.id]
+  id_tipo int [ref: > Tipo_Servico.id, not null]
 }
 
 Table Fornecedor_Servico {
@@ -98,6 +95,8 @@ Table Fornecedor_Servico {
   id_servico int [ref: > Servico.id]
   id int [pk]
   titulo_comercial varchar(256)
+  provedor_nome varchar(50)
+  codigo_id_externo varchar(250)
   status varchar [default: 'DISPONIVEL']
   data_atualizacao timestamp [default: `now()`]
 }
@@ -126,6 +125,7 @@ Table Reserva {
   data_fim_viagem_utc timestamp
   status varchar
   preco_total decimal(13,4)
+  orcamento decimal(13,4)
 }
 
 Table Reserva_Item {
@@ -133,6 +133,7 @@ Table Reserva_Item {
   id_servico_fornecedor int [ref: > Fornecedor_Servico.id]
   custo_fornecedor decimal(13,4)
   preco_venda decimal(13,4)
+  gerado_pelo_pacote boolean
   indexes {
     (id_reserva, id_servico_fornecedor) [pk]
   }
@@ -167,7 +168,7 @@ Table Itinerario {
 
 // Relacionamentos adicionais (Composite Keys)
 Ref: Itinerario.(id_reserva, id_servico_fornecedor) > Reserva_Item.(id_reserva, id_servico_fornecedor)
-Ref: Pessoa_Fisica.(id_pessoa, tipo_pessoa) - Pessoa.(id, tipo_pessoa)
-Ref: Pessoa_Juridica.(id_pessoa, tipo_pessoa) - Pessoa.(id, tipo_pessoa)
+Ref: Pessoa_Fisica.(id_pessoa) - Pessoa.(id)
+Ref: Pessoa_Juridica.(id_pessoa) - Pessoa.(id)
 Ref: Pessoa_Papel.id_pessoa > Pessoa.id
 Ref: Pessoa_Papel.id_papel > Papel.id

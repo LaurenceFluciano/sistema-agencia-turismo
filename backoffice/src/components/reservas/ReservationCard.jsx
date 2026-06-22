@@ -17,6 +17,8 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import ReservationItemDialog from "./ReservationItemDialog";
 import PackageDialog from "./PackageDialog";
 import Link from "next/link";
+import { deleteReservationById } from "@/services/reservas/reservation.repository";
+import { useRouter } from "next/navigation";
 
 
 export default function ReservationCard({
@@ -24,6 +26,8 @@ export default function ReservationCard({
 }) {
     const [openEdit, setOpenEdit] = useState(false)
     const [selectedReservation, setSelectedReservation] = useState(null)
+
+    const  router  = useRouter()
 
 
     const [itemDialogOpen, setItemDialogOpen] = useState(false);
@@ -72,7 +76,13 @@ export default function ReservationCard({
                     </DropdownMenuItem>
 
                     <DropdownMenuItem 
-                        className="text-red-400" 
+                        className="text-red-400"
+                        onClick={async () => {
+                            const result = await deleteReservationById(reserva.id)
+
+                            alert(result.message)
+                            router.refresh()
+                        }}
                     >
                     Remover
                     </DropdownMenuItem>

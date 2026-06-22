@@ -194,3 +194,18 @@ export async function getReservationById(idReserva) {
 
     return reserva
 }
+
+
+export async function deleteReservationById(idReserva) {
+  try {
+    await sql`
+        DELETE FROM "Reserva"
+        WHERE id = ${idReserva}
+    `
+        return {success: true, message: "Removido com sucesso"}
+    }
+    catch (err) {
+        console.log(err)
+        return {success: false, message: err.message}
+    }
+}

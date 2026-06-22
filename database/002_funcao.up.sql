@@ -87,6 +87,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+/* RESERVAS */
+
 
 CREATE OR REPLACE FUNCTION fn_copiar_itens_pacote_para_reserva()
 RETURNS TRIGGER AS $$
