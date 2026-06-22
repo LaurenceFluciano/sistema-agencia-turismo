@@ -1,13 +1,12 @@
-'use server'
-import sql from "../db";
-
-
 async function listOffers() {
-    const offers = await sql`
-        SELECT * FROM vw_fornecedor_servico_completo WHERE status_fornecedor = 'ATIVO';
-    `
+    const response = await fetch('/api/ofertas', { cache: 'no-store' });
 
-    return offers
+    if (!response.ok) {
+        throw new Error(`Erro ao carregar ofertas: ${response.status} ${response.statusText}`);
+    }
+
+    const json = await response.json();
+    return json.data ?? json.ofertas ?? json.items ?? [];
 }
 
 

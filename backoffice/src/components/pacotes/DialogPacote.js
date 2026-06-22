@@ -36,7 +36,19 @@ export default function DialogPacote({ pacoteParaEditar = null, open: openProp =
       try {
         setLoadingOfertas(true);
         const data = await listOffers();
-        setOfertas(data || []);
+        console.log('Dados da API:', data);
+        let ofertasArray = [];
+
+        if (Array.isArray(data)) {
+          ofertasArray = data;
+        } else if (data && typeof data === "object") {
+          ofertasArray = data.data ?? data.ofertas ?? data.items ?? [];
+          if (!Array.isArray(ofertasArray)) {
+            ofertasArray = [];
+          }
+        }
+
+        setOfertas(ofertasArray);
       } catch (error) {
         console.error("Erro ao carregar ofertas:", error);
         toast.add({ title: "Erro", description: "Não foi possível carregar as ofertas.", type: "error" });
@@ -53,7 +65,7 @@ export default function DialogPacote({ pacoteParaEditar = null, open: openProp =
   useEffect(() => {
     if (open && pacoteParaEditar) {
       setNome(pacoteParaEditar.nome || "");
-      setItensSelecionados(pacoteParaEditar.itensSelecionados || []);
+      setItensSelecionados(pacoteParaEditar.itensSelecionados ?? pacoteParaEditar.itens ?? []);
       setStep(1);
     }
   }, [open, pacoteParaEditar]);

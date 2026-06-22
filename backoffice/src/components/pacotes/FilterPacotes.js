@@ -41,9 +41,9 @@ export default function FilterPacotes() {
       <SelectContent>
         <SelectGroup>
           <SelectItem value="">Todos</SelectItem>
-          <SelectItem value="DISPONIVEL">DISPONÍVEL</SelectItem>
-          <SelectItem value="INDISPONIVEL">INDISPONÍVEL</SelectItem>
-          <SelectItem value="INATIVO">INATIVO</SelectItem>
+          <SelectItem value="DISPONIVEL">Disponível</SelectItem>
+          <SelectItem value="INDISPONIVEL">Indisponível</SelectItem>
+          <SelectItem value="ENCERRADO">Encerrado</SelectItem>
         </SelectGroup>
       </SelectContent>
     </Select>
