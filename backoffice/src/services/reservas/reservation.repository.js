@@ -2,7 +2,7 @@
 import sql from "../db";
 
 
-async function listReservations() {
+export async function listReservations(filters) {
     const reservas = await sql`
         SELECT DISTINCT
             r."id",
@@ -22,13 +22,13 @@ async function listReservations() {
         LEFT JOIN "Pacote" pa ON pa."id" = r."id_pacote"
         LEFT JOIN "Pessoa" pe ON pe."id" = r."id_cliente"
         JOIN "Pessoa_Fisica" pf ON pe."id" = pf."id_pessoa"
-        ORDER BY r."id" ASC
+        ${filters}
     `
 
     return reservas
 }
 
-async function registerReservation(payload, items) {
+export async function registerReservation(payload, items) {
     // adiciona itens do pacote pode deixar assim
     try {
         await sql.begin(async (sql) => {
@@ -72,7 +72,7 @@ async function registerReservation(payload, items) {
     }
 }
 
-async function updateReservation(payload, items) {
+export async function updateReservation(payload, items) {
     // atualiza a reserva normalmente, não tem responsabilidade de remover itens do pacote
     try {
         await sql.begin(async (sql) => {
@@ -121,7 +121,7 @@ async function updateReservation(payload, items) {
 }
 
 
-async function listReservationItemsByReservationId(id, pegarGeradoPeloPacote=false) {
+export async function listReservationItemsByReservationId(id, pegarGeradoPeloPacote=false) {
     // Aqui mantem o id pq estou listando apenas
     const reservationItems = await sql`
         SELECT 
@@ -167,7 +167,7 @@ export async function updateReservationItemPrices(items, reservaId) {
     } 
 }
 
-async function getReservationById(idReserva) {
+export async function getReservationById(idReserva) {
     const reserva = await sql`
         SELECT
             r."id",
@@ -193,5 +193,3 @@ async function getReservationById(idReserva) {
 
     return reserva
 }
-
-export {getReservationById, listReservations, registerReservation , listReservationItemsByReservationId, updateReservation, updateReservationItemPrices};

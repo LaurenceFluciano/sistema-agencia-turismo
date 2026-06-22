@@ -1,9 +1,5 @@
 import sql from "../db";
 
-// TODO: Dívida técnica - Removido/Duplicado do módulo de pacotes para isolar a funcionalidade da apresentação.
-// Se precisar alterar a query SQL, lembre-se de sincronizar com:
-// @/services/pacotes/package.repository.js
-
 async function listPacotes(searchQuery = '', statusFilter = '') {
   const filterClause = searchQuery
     ? statusFilter

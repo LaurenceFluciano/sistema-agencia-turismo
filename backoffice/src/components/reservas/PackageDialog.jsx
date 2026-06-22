@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { listPackages, updateReservationPackage } from "@/services/pacotes/packages.repository";
+import { listPackages, updateReservationPackage } from "@/services/reservas/packages.repository";
 import { useRouter } from "next/navigation";
 
 export default function PackageDialog({ reserva, open, onOpenChange }) {

@@ -1,12 +1,14 @@
 import ReservationActions from "@/components/reservas/ReservationActions";
 import ReservationCard from "@/components/reservas/ReservationCard";
+import { buildReservationFilters } from "@/services/reservas/reservation.filter";
 import { listReservations } from "@/services/reservas/reservation.repository";
 
-export default async function Page() {
+export default async function Page({ searchParams }) {
+  const params = await searchParams;
 
-  const reservas = await listReservations();
+  const queryFilters = buildReservationFilters(params);
+  const reservas = await listReservations(queryFilters);
   
-
   return (
     <main className="max-w-7xl mx-auto p-6 md:p-12 min-h-screen bg-background text-foreground">
           <div className="mb-8 flex">
