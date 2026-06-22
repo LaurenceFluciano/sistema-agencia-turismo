@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
@@ -20,13 +20,34 @@ import {
 import { MoreHorizontal, Pencil, Trash } from "lucide-react";
 import { useToast } from "../ui/toast";
 import { fixEncoding } from "@/lib/utils";
+import { fetchItemsFromPackage } from "@/services/reservas/packages.repository";
 
 export function CardPacote({ id, nome, status, quantidadeReservada, pacote, onEdit }) {
-  const disponivel = status === "DISPONÍVEL";
+  const disponivel = status === "DISPONIVEL";
   const [isDeleting, setIsDeleting] = useState(false);
   const [isItensOpen, setIsItensOpen] = useState(false);
   const toast = useToast();
-  const itensAssociados = pacote?.itensSelecionados ?? pacote?.itens ?? []; 
+
+  const [itensAssociados, setItensAssociados] = useState([]);
+  const [loadingItens, setLoadingItens] = useState(false);
+
+  useEffect(() => {
+    if (isItensOpen) {
+      async function carregarItens() {
+        setLoadingItens(true);
+        try {
+          const items = await fetchItemsFromPackage(id); 
+          setItensAssociados(items);
+        } catch (err) {
+          console.error("Erro ao buscar itens:", err);
+        } finally {
+          setLoadingItens(false);
+        }
+      }
+      carregarItens();
+    }
+  }, [isItensOpen, id]);
+
 
   async function handleDelete() {
     if (isDeleting) {
@@ -67,7 +88,7 @@ export function CardPacote({ id, nome, status, quantidadeReservada, pacote, onEd
           className={
             disponivel
               ? "border border-emerald-500 text-emerald-600 bg-emerald-500/10"
-              : "border border-muted text-muted-foreground"
+              : "border border-amber-500 text-amber-600 bg-amber-500/10 border-muted text-muted-foreground"
           }
         >
           {status}
@@ -118,28 +139,28 @@ export function CardPacote({ id, nome, status, quantidadeReservada, pacote, onEd
             <DialogTitle>Itens associados</DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-3 py-2">
-            {itensAssociados?.length > 0 ? (
+          <div className="space-y-3 py-2 max-h-[60vh] overflow-y-auto">
+            {loadingItens ? (
+              <p className="text-sm">Carregando...</p>
+            ) : itensAssociados.length > 0 ? (
               <div className="space-y-2">
                 {itensAssociados.map((item) => (
-                  <div key={item.id_fornecedor_servico ?? item.id} className="rounded-lg border p-3">
+                  <div key={item.id_fornecedor_servico} className="rounded-lg border p-3">
                     <div className="flex flex-col gap-1">
-                      <span className="font-semibold">{item.nome_comercial ?? item.nome}</span>
-                      {item.tipo_servico && <span className="text-sm text-muted-foreground">{item.tipo_servico}</span>}
-                      <span className="text-xs text-muted-foreground">ID: {item.id_fornecedor_servico ?? item.id}</span>
+                      <span className="font-semibold">{item.nomeOferta}</span>
+                      <span className="text-sm text-muted-foreground">{item.cidade} / {item.estado}</span>
+                      <span className="text-xs text-muted-foreground">ID: {item.id_fornecedor_servico}</span>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">Nenhum item associado a este pacote.</p>
+              <p className="text-sm text-muted-foreground">Nenhum item encontrado.</p>
             )}
           </div>
-
-          <DialogFooter className="justify-end">
-            <Button variant="default" onClick={() => setIsItensOpen(false)}>
-              Fechar
-            </Button>
+          
+          <DialogFooter>
+            <Button variant="default" onClick={() => setIsItensOpen(false)}>Fechar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
