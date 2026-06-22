@@ -9,7 +9,6 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 } from "@/components/ui/dropdown-menu"*/
 
 
-import { useRouter } from "next/navigation"
 import { useState } from "react";
 import { Button } from "../ui/button";
 import { CalendarDays, DollarSign, MoreVertical, Package } from "lucide-react";
@@ -17,6 +16,7 @@ import ReservationDialog from "./ReservationDialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import ReservationItemDialog from "./ReservationItemDialog";
 import PackageDialog from "./PackageDialog";
+import Link from "next/link";
 
 
 export default function ReservationCard({
@@ -24,6 +24,7 @@ export default function ReservationCard({
 }) {
     const [openEdit, setOpenEdit] = useState(false)
     const [selectedReservation, setSelectedReservation] = useState(null)
+
 
     const [itemDialogOpen, setItemDialogOpen] = useState(false);
     const [pkgOpen, setPkgOpen] = useState(false);
@@ -117,7 +118,14 @@ export default function ReservationCard({
                 className="text-md text-muted-foreground hover:text-primary"
                 onClick={() => setPkgOpen(true)}
                 >Pacotes</Button>
-            <Button variant="outline" className="text-md text-muted-foreground hover:text-primary">Itinerários</Button>
+            <Button 
+                variant="outline" 
+                className="text-md text-muted-foreground hover:text-primary"
+            >
+                <Link href={`/itinerario/${reserva.id}`}>
+                    Itinerários
+                </Link>
+        </Button>
           </CardFooter>
         </Card>
 

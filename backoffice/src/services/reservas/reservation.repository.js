@@ -167,4 +167,31 @@ export async function updateReservationItemPrices(items, reservaId) {
     } 
 }
 
-export { listReservations, registerReservation , listReservationItemsByReservationId, updateReservation, updateReservationItemPrices};
+async function getReservationById(idReserva) {
+    const reserva = await sql`
+        SELECT
+            r."id",
+            pe."id" as id_cliente,
+            pe."nome" AS nome_cliente,
+            pf."cpf" AS cpf,
+            pe."email" AS email,
+            r."status",
+            r."data_inicio_viagem_utc",
+            r."data_fim_viagem_utc",
+            r."preco_total",
+            r."orcamento",
+            pa."nome" AS nome_pacote,
+            pa."id" AS id_pacote,
+            pa."status" AS status_pacote
+        FROM "Reserva" r
+        LEFT JOIN "Pacote" pa ON pa."id" = r."id_pacote"
+        LEFT JOIN "Pessoa" pe ON pe."id" = r."id_cliente"
+        JOIN "Pessoa_Fisica" pf ON pe."id" = pf."id_pessoa"
+        WHERE r."id" = ${idReserva}
+    `
+
+
+    return reserva
+}
+
+export {getReservationById, listReservations, registerReservation , listReservationItemsByReservationId, updateReservation, updateReservationItemPrices};

@@ -27,6 +27,8 @@ CREATE OR REPLACE VIEW vw_relatorio_itinerario_completo AS
 SELECT 
     i."id" AS itinerario_id,
     r."id" AS reserva_id,
+    i."id_fornecedor_servico" AS id_fornecedor_servico,
+    i."id_municipio" AS id_municipio,
     p."nome" AS nome_cliente,
     s."nome_oficial" AS nome_servico,
     m."nome" AS nome_municipio,
